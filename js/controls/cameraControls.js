@@ -8,6 +8,7 @@
  * @tutorial https://threejs.org/docs/#api/en/math/Spherical
  */
 
+import * as THREE from 'three';
 import { CAMERA } from '../core/constants.js';
 import { sceneSetup } from '../core/sceneSetup.js';
 

@@ -8,6 +8,7 @@
  * @tutorial https://www.redblobgames.com/grids/hexagons/
  */
 
+import * as THREE from 'three';
 import { HEX_SIZE, COLORS } from '../core/constants.js';
 
 /**

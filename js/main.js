@@ -7,6 +7,8 @@
  * @module main
  */
 
+import * as THREE from 'three';
+
 // Core 모듈
 import { gameState } from './core/gameState.js';
 import { sceneSetup } from './core/sceneSetup.js';
@@ -239,11 +241,21 @@ class Game {
      */
     startGameLoop() {
         let frameCount = 0;
+        const clock = new THREE.Clock();
+        
         const animate = () => {
             this.animationFrameId = requestAnimationFrame(animate);
             
+            // Delta time for animations
+            const delta = clock.getDelta();
+            
             // FPS 카운터 업데이트
             fpsCounter.update();
+            
+            // 캐릭터 애니메이션 업데이트
+            gameState.allCharacters.forEach(character => {
+                character.update(delta);
+            });
             
             // 카메라 업데이트 - DISABLED to prevent camera jumping
             // cameraControls.updateCameraPosition();

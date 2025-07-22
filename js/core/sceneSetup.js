@@ -7,6 +7,7 @@
  * @tutorial https://threejs.org/docs/#manual/introduction/Creating-a-scene
  */
 
+import * as THREE from 'three';
 import { COLORS, CAMERA, RENDERER } from './constants.js';
 
 /**

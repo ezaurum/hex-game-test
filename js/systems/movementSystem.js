@@ -6,6 +6,7 @@
  * @module movementSystem
  */
 
+import * as THREE from 'three';
 import { gameState } from '../core/gameState.js';
 import { gridSystem } from './gridSystem.js';
 import { COLORS } from '../core/constants.js';

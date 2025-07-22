@@ -6,6 +6,7 @@
  * @module inputHandler
  */
 
+import * as THREE from 'three';
 import { gameState } from '../core/gameState.js';
 import { sceneSetup } from '../core/sceneSetup.js';
 import { gridSystem } from '../systems/gridSystem.js';
