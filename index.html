@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hex Tile RPG Combat Prototype</title>
+    <style>
+        body { 
+            margin: 0; 
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        #gameCanvas { 
+            width: 100vw; 
+            height: 100vh; 
+            display: block; 
+        }
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #fpsCounter {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        #combatLog {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 300px;
+            height: 150px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .health-bar {
+            position: absolute;
+            width: 60px;
+            height: 6px;
+            background: #333;
+            border: 1px solid #fff;
+        }
+        .health-fill {
+            height: 100%;
+            background: #4CAF50;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameCanvas"></div>
+    <div id="ui">
+        <h3>전투 프로토타입</h3>
+        <p>클릭: 캐릭터 선택/이동</p>
+        <p>스페이스바: 공격 모드</p>
+        <p>현재 턴: <span id="currentTurn">플레이어</span></p>
+    </div>
+    <div id="fpsCounter">FPS: <span id="fps">0</span></div>
+    <div id="combatLog">
+        <h4>전투 로그</h4>
+        <div id="logContent"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
