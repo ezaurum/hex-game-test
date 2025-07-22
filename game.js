@@ -489,11 +489,17 @@ function onMouseClick(event) {
     // Only process left clicks for game interaction
     if (event.button !== 0) return;
     
+    console.log('Mouse click event fired');
+    
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(scene.children);
     
+    console.log('Intersects count:', intersects.length);
+    
     if (intersects.length > 0) {
         const object = intersects[0].object;
+        console.log('Clicked object:', object);
+        console.log('Object userData:', object.userData);
         
         if (object.userData.character) {
             const character = object.userData.character;
