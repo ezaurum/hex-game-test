@@ -342,7 +342,9 @@ export class CombatLog {
      * 모든 로그 삭제
      */
     clearLogs() {
-        this.logList.innerHTML = '';
+        if (this.logList) {
+            this.logList.innerHTML = '';
+        }
         this.logCount = 0;
     }
     

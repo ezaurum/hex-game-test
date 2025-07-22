@@ -64,11 +64,14 @@ export class SceneSetup {
      */
     initScene() {
         // 씬 생성
-        this.scene = new window.THREE.Scene();
+        this.scene = new THREE.Scene();
+        
+        // 배경 색상 설정
+        this.scene.background = new THREE.Color(0x2c3e50);
         
         // 안개 효과 추가 (깊이감 표현)
         // 안개는 카메라로부터의 거리에 따라 객체를 페이드 아웃시킵니다
-        this.scene.fog = new window.THREE.Fog(COLORS.FOG_COLOR, 10, 50);
+        this.scene.fog = new THREE.Fog(COLORS.FOG_COLOR, 10, 50);
         
         console.log('씬 초기화 완료');
         return this.scene;
@@ -82,7 +85,7 @@ export class SceneSetup {
     initCamera(aspectRatio = window.innerWidth / window.innerHeight) {
         // 원근 카메라 생성
         // 매개변수: FOV(시야각), 종횡비, near(최소 렌더 거리), far(최대 렌더 거리)
-        this.camera = new window.THREE.PerspectiveCamera(
+        this.camera = new THREE.PerspectiveCamera(
             75,          // 시야각 (degrees)
             aspectRatio, // 종횡비
             0.1,         // near plane
@@ -113,11 +116,18 @@ export class SceneSetup {
      * @returns {THREE.WebGLRenderer} 생성된 렌더러 객체
      */
     initRenderer(container = document.body) {
+        console.log('initRenderer called with container:', container);
+        
         // WebGL 렌더러 생성
-        this.renderer = new window.THREE.WebGLRenderer({
+        this.renderer = new THREE.WebGLRenderer({
             antialias: RENDERER.ANTIALIAS, // 계단 현상 방지
-            alpha: true                    // 투명 배경 지원
+            alpha: false                   // 투명 배경 비활성화
         });
+        
+        // Set clear color explicitly
+        this.renderer.setClearColor(0x2c3e50, 1);
+        
+        console.log('WebGLRenderer created:', this.renderer);
         
         // 렌더러 크기 설정
         this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -127,12 +137,25 @@ export class SceneSetup {
         
         // 그림자 설정
         this.renderer.shadowMap.enabled = RENDERER.SHADOW_MAP_ENABLED;
-        this.renderer.shadowMap.type = window.THREE[RENDERER.SHADOW_MAP_TYPE];
+        this.renderer.shadowMap.type = THREE[RENDERER.SHADOW_MAP_TYPE];
         
         // DOM에 캔버스 추가
-        container.appendChild(this.renderer.domElement);
+        console.log('About to append canvas to container');
+        console.log('Container element:', container);
+        console.log('Renderer domElement:', this.renderer.domElement);
+        
+        try {
+            container.appendChild(this.renderer.domElement);
+            console.log('Canvas successfully appended');
+        } catch (error) {
+            console.error('Failed to append canvas:', error);
+        }
         
         console.log('렌더러 초기화 완료');
+        console.log('Canvas added to:', container);
+        console.log('Canvas element:', this.renderer.domElement);
+        console.log('Canvas size:', this.renderer.domElement.width, 'x', this.renderer.domElement.height);
+        console.log('Container children after append:', container.children.length);
         return this.renderer;
     }
     
@@ -143,7 +166,7 @@ export class SceneSetup {
     initLights() {
         // 환경광 (Ambient Light)
         // 모든 객체를 균일하게 비추는 광원
-        this.lights.ambient = new window.THREE.AmbientLight(
+        this.lights.ambient = new THREE.AmbientLight(
             COLORS.AMBIENT_LIGHT, // 색상
             1                     // 강도
         );
@@ -151,7 +174,7 @@ export class SceneSetup {
         
         // 방향광 (Directional Light)
         // 태양광처럼 평행한 빛을 만드는 광원
-        this.lights.directional = new window.THREE.DirectionalLight(
+        this.lights.directional = new THREE.DirectionalLight(
             COLORS.DIRECTIONAL_LIGHT, // 색상
             1                         // 강도
         );
@@ -196,6 +219,25 @@ export class SceneSetup {
      * 렌더링 실행
      */
     render() {
+        // Debug: Check if we're actually rendering
+        if (!this._renderCount) {
+            this._renderCount = 0;
+        }
+        if (this._renderCount < 5) {
+            console.log(`Render call ${this._renderCount}: scene has ${this.scene.children.length} children`);
+            this._renderCount++;
+            
+            // Debug: Log first few mesh positions
+            let meshCount = 0;
+            this.scene.traverse((obj) => {
+                if (obj.isMesh && meshCount < 3) {
+                    console.log(`Mesh ${meshCount}: pos (${obj.position.x.toFixed(1)}, ${obj.position.y.toFixed(1)}, ${obj.position.z.toFixed(1)})`);
+                    meshCount++;
+                }
+            });
+        }
+        
+        
         this.renderer.render(this.scene, this.camera);
     }
     

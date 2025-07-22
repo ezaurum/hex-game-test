@@ -90,7 +90,7 @@ export const COLORS = {
     // 환경 색상
     AMBIENT_LIGHT: 0x404040,      // 환경광 색상
     DIRECTIONAL_LIGHT: 0xffffff,  // 방향광 색상
-    FOG_COLOR: 0x000000,          // 안개 색상
+    FOG_COLOR: 0x2c3e50,          // 안개 색상 (배경색과 동일)
 };
 
 /**

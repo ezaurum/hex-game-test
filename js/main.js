@@ -60,14 +60,50 @@ class Game {
             const gameCanvas = document.getElementById('gameCanvas');
             const { scene, camera, renderer } = sceneSetup.init(gameCanvas);
             
+            console.log('Scene setup complete:', {
+                scene: scene,
+                sceneChildren: scene.children.length,
+                camera: camera.position,
+                renderer: renderer
+            });
+            
             // 그리드 생성
             gridSystem.createGrid();
+            console.log('Grid created:', {
+                tileMapSize: gridSystem.tileMap.size,
+                allTilesLength: gridSystem.allTiles.length,
+                sceneChildrenAfterGrid: scene.children.length
+            });
             
             // 캐릭터 생성
             this.createCharacters();
             
-            // 컨트롤 초기화
+            // Calculate center of game board FIRST
+            let centerX = 0, centerZ = 0, tileCount = 0;
+            gridSystem.allTiles.forEach(tile => {
+                const pos = tile.getPixelPosition();
+                centerX += pos.x;
+                centerZ += pos.z;
+                tileCount++;
+            });
+            if (tileCount > 0) {
+                centerX /= tileCount;
+                centerZ /= tileCount;
+            }
+            
+            console.log('Game board center:', centerX, centerZ);
+            
+            // Set board center BEFORE initializing controls
+            cameraControls.setBoardCenter(centerX, centerZ);
+            
+            // NOW initialize controls
             cameraControls.init();
+            
+            // Force camera to a good position after controls init
+            camera.position.set(centerX + 10, 15, centerZ + 10);
+            camera.lookAt(centerX, 0, centerZ);
+            console.log('Camera positioned to look at board center');
+            
             inputHandler.init();
             
             // UI 초기화
@@ -202,17 +238,24 @@ class Game {
      * 게임 루프 시작
      */
     startGameLoop() {
+        let frameCount = 0;
         const animate = () => {
             this.animationFrameId = requestAnimationFrame(animate);
             
             // FPS 카운터 업데이트
             fpsCounter.update();
             
-            // 카메라 업데이트
-            cameraControls.updateCameraPosition();
+            // 카메라 업데이트 - DISABLED to prevent camera jumping
+            // cameraControls.updateCameraPosition();
             
             // 렌더링
             sceneSetup.render();
+            
+            // Debug: Log first few frames
+            if (frameCount < 5) {
+                console.log(`Frame ${frameCount}: Rendering...`);
+                frameCount++;
+            }
         };
         
         animate();
@@ -318,12 +361,21 @@ class Game {
 const game = new Game();
 
 // DOM 로드 완료 시 게임 시작
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        game.init();
-    });
-} else {
+function startGame() {
+    const gameCanvas = document.getElementById('gameCanvas');
+    if (!gameCanvas) {
+        console.error('gameCanvas element not found! Waiting...');
+        setTimeout(startGame, 100);
+        return;
+    }
     game.init();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startGame);
+} else {
+    // Even if document is ready, ensure gameCanvas exists
+    startGame();
 }
 
 // 전역 객체로 노출 (디버깅용)
@@ -333,5 +385,7 @@ window.gridSystem = gridSystem;
 
 // 페이지 언로드 시 정리
 window.addEventListener('beforeunload', () => {
-    game.destroy();
+    if (game.initialized) {
+        game.destroy();
+    }
 });

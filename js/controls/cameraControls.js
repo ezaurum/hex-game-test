@@ -30,8 +30,8 @@ export class CameraControls {
          * @tutorial https://en.wikipedia.org/wiki/Spherical_coordinate_system
          */
         this.spherical = {
-            radius: 20,      // 카메라와 타겟 사이의 거리
-            theta: Math.PI / 4,   // 수평 각도 (방위각)
+            radius: 20,           // 카메라와 타겟 사이의 거리
+            theta: -Math.PI / 4,  // 수평 각도 (방위각)
             phi: Math.PI / 3,     // 수직 각도 (극각)
         };
         
@@ -81,13 +81,28 @@ export class CameraControls {
      * 카메라 컨트롤 초기화
      */
     init() {
-        // 초기 카메라 위치 설정
-        this.updateCameraPosition();
+        // Skip the initial camera position update - let main.js set it
+        // this.updateCameraPosition();
         
         // 이벤트 리스너 등록
         this.setupEventListeners();
         
+        // Store the initial target as board center
+        this.boardCenterX = this.target.x;
+        this.boardCenterZ = this.target.z;
+        
         console.log('카메라 컨트롤 초기화 완료');
+        console.log('Board center stored:', this.boardCenterX, this.boardCenterZ);
+    }
+    
+    /**
+     * Set the game board center for camera to orbit around
+     */
+    setBoardCenter(x, z) {
+        this.boardCenterX = x;
+        this.boardCenterZ = z;
+        this.target.set(x, 0, z);
+        this.smoothTarget.position.set(x, 0, z);
     }
     
     /**
