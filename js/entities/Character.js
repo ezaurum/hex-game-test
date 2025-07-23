@@ -20,6 +20,7 @@ import {
     DAMAGE_VARIANCE,
     ANIMATION
 } from '../core/constants.js';
+import { healthBarUI } from '../ui/healthBarUI.js';
 
 /**
  * 캐릭터 클래스
@@ -124,15 +125,11 @@ export class Character {
          */
         this.mesh = null;
 
-        /**
-         * 체력바 그룹
-         * @type {THREE.Group}
-         */
-        this.healthBarGroup = null;
-
         // 3D 모델 생성
         this.createMesh();
-        this.createHealthBar();
+        
+        // 2D 체력바 생성
+        healthBarUI.createHealthBar(this);
 
         // 초기 위치 설정
         if (tile) {
@@ -245,67 +242,7 @@ export class Character {
         this.group.add(this.mesh);
     }
 
-    /**
-     * 체력바 UI 생성
-     *
-     * 캐릭터 위에 표시되는 체력바를 생성합니다.
-     */
-    createHealthBar() {
-        this.healthBarGroup = new THREE.Group();
 
-        // 체력바 배경
-        const bgGeometry = new THREE.PlaneGeometry(1, 0.1);
-        const bgMaterial = new THREE.MeshBasicMaterial({
-            color: COLORS.HEALTH_BAR_BG,
-            side: THREE.DoubleSide,
-        });
-        const bgMesh = new THREE.Mesh(bgGeometry, bgMaterial);
-
-        // 체력바 채움
-        const fillGeometry = new THREE.PlaneGeometry(1, 0.1);
-        const fillMaterial = new THREE.MeshBasicMaterial({
-            color: COLORS.HEALTH_BAR_FILL,
-            side: THREE.DoubleSide,
-        });
-        this.healthBarFill = new THREE.Mesh(fillGeometry, fillMaterial);
-
-        // 위치 설정
-        bgMesh.position.y = 1.5;
-        this.healthBarFill.position.y = 1.5;
-        this.healthBarFill.position.z = 0.01; // 배경보다 약간 앞
-
-        // 그룹에 추가
-        this.healthBarGroup.add(bgMesh);
-        this.healthBarGroup.add(this.healthBarFill);
-
-        // 메인 그룹에 추가
-        this.group.add(this.healthBarGroup);
-
-        // 초기 체력바 업데이트
-        this.updateHealthBar();
-    }
-
-    /**
-     * 체력바 업데이트
-     */
-    updateHealthBar() {
-        const healthPercent = this.health / this.maxHealth;
-
-        // 체력 비율에 따라 너비 조정
-        this.healthBarFill.scale.x = Math.max(0, healthPercent);
-
-        // 체력에 따라 색상 변경
-        if (healthPercent > 0.6) {
-            this.healthBarFill.material.color.setHex(0x00ff00); // 녹색
-        } else if (healthPercent > 0.3) {
-            this.healthBarFill.material.color.setHex(0xffff00); // 노란색
-        } else {
-            this.healthBarFill.material.color.setHex(0xff0000); // 빨간색
-        }
-
-        // 체력바 위치 조정 (중앙 정렬)
-        this.healthBarFill.position.x = (healthPercent - 1) * 0.5;
-    }
 
     /**
      * 캐릭터 위치 설정
@@ -467,7 +404,7 @@ export class Character {
      */
     takeDamage(damage) {
         this.health = Math.max(0, this.health - damage);
-        this.updateHealthBar();
+        healthBarUI.updateHealthBar(this);
 
         // 피격 효과 (빨간색 플래시)
         const originalColor = this.mesh.children[0].material.color.getHex();
@@ -620,6 +557,7 @@ export class Character {
         this.currentAction = action;
     }
 
+
     /**
      * 리소스 정리
      */
@@ -634,5 +572,8 @@ export class Character {
             if (child.geometry) child.geometry.dispose();
             if (child.material) child.material.dispose();
         });
+        
+        // 2D 체력바 제거
+        healthBarUI.removeHealthBar(this);
     }
 }

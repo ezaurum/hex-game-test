@@ -14,6 +14,7 @@ import { movementSystem } from '../systems/movementSystem.js';
 import { combatSystem } from '../systems/combatSystem.js';
 import { aiSystem } from '../systems/aiSystem.js';
 import { TURN_TYPE, CHARACTER_TYPE } from '../core/constants.js';
+import { createParticleEffect } from '../utils/animation.js';
 
 /**
  * 입력 핸들러 클래스
@@ -104,6 +105,10 @@ export class InputHandler {
         
         if (intersects.length > 0) {
             const clickedObject = intersects[0].object;
+            const intersectionPoint = intersects[0].point;
+            
+            // 클릭 지점에 파티클 효과 생성
+            this.createClickParticles(intersectionPoint);
             
             // 타일 클릭 처리
             if (clickedObject.userData.tile) {
@@ -518,6 +523,48 @@ export class InputHandler {
             this.hoveredTile = null;
             movementSystem.clearAllHighlights();
         }
+    }
+    
+    /**
+     * 클릭 위치에 파티클 효과 생성
+     * 
+     * @param {THREE.Vector3} position
+     */
+    createClickParticles(position) {
+        // 파티클 효과 옵션 설정
+        const options = {
+            count: 20,
+            size: 0.2,
+            color: 0x00ffff,
+            lifetime: 1000,
+            velocity: { x: 0, y: 2, z: 0 },
+            spread: 1.5,
+            gravity: -3
+        };
+        
+        // 파티클 효과 생성
+        const particleEffect = createParticleEffect(sceneSetup.scene, options);
+        
+        // 파티클 위치를 클릭 지점으로 설정
+        particleEffect.position.copy(position);
+        
+        // 파티클 업데이트를 위한 함수 추가
+        const updateParticles = () => {
+            if (particleEffect.userData.update) {
+                particleEffect.userData.update();
+            }
+        };
+        
+        // 메인 루프에 업데이트 함수 추가
+        particleEffect.userData.updateId = setInterval(updateParticles, 16);
+        
+        // 일정 시간 후 파티클 제거
+        setTimeout(() => {
+            clearInterval(particleEffect.userData.updateId);
+            sceneSetup.scene.remove(particleEffect);
+            if (particleEffect.geometry) particleEffect.geometry.dispose();
+            if (particleEffect.material) particleEffect.material.dispose();
+        }, 2000);
     }
 }
 

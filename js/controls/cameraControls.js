@@ -157,7 +157,7 @@ export class CameraControls {
         // 마우스 휠
         canvas.addEventListener('wheel', (e) => this.onMouseWheel(e));
 
-        // 컨텍스트 메뉴 방지 (우클릭)
+        // 컨텍스트 메뉴 방지
         canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
         // 키보드 이벤트 (+/- 줌)
@@ -176,11 +176,13 @@ export class CameraControls {
      */
     onMouseDown(event) {
         if (event.button === 0) {
-            // 좌클릭: 팬 시작
-            this.dragState.isLeftDragging = true;
-        } else if (event.button === 2) {
-            // 우클릭: 회전 시작
-            this.dragState.isRightDragging = true;
+            if (event.shiftKey) {
+                // Shift + 좌클릭: 회전 시작
+                this.dragState.isRightDragging = true;
+            } else {
+                // 좌클릭: 팬 시작
+                this.dragState.isLeftDragging = true;
+            }
         }
 
         this.dragState.lastMouseX = event.clientX;
@@ -196,11 +198,11 @@ export class CameraControls {
         const deltaX = event.clientX - this.dragState.lastMouseX;
         const deltaY = event.clientY - this.dragState.lastMouseY;
 
-        if (this.dragState.isLeftDragging) {
-            // 좌클릭 드래그: 카메라 팬
+        if (this.dragState.isLeftDragging && !event.shiftKey) {
+            // 좌클릭 드래그 (Shift 없이): 카메라 팬
             this.pan(deltaX, deltaY);
-        } else if (this.dragState.isRightDragging) {
-            // 우클릭 드래그: 카메라 회전
+        } else if (this.dragState.isRightDragging || (this.dragState.isLeftDragging && event.shiftKey)) {
+            // Shift + 좌클릭 드래그: 카메라 회전
             this.rotate(deltaX, deltaY);
         }
 
@@ -216,7 +218,6 @@ export class CameraControls {
     onMouseUp(event) {
         if (event.button === 0) {
             this.dragState.isLeftDragging = false;
-        } else if (event.button === 2) {
             this.dragState.isRightDragging = false;
         }
     }

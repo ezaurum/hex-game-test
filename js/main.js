@@ -30,6 +30,7 @@ import { inputHandler } from './controls/inputHandler.js';
 // UI 모듈
 import { combatLog } from './ui/combatLog.js';
 import { fpsCounter } from './ui/fpsCounter.js';
+import { healthBarUI } from './ui/healthBarUI.js';
 
 /**
  * 게임 메인 클래스
@@ -68,6 +69,11 @@ class Game {
                 camera: camera.position,
                 renderer: renderer
             });
+
+            // UI 초기화 (캐릭터 생성 전에 해야 함)
+            combatLog.init();
+            fpsCounter.init();
+            healthBarUI.init();
 
             // 그리드 생성
             gridSystem.createGrid();
@@ -121,10 +127,6 @@ class Game {
             cameraControls.init();
 
             inputHandler.init();
-
-            // UI 초기화
-            combatLog.init();
-            fpsCounter.init();
 
             // 전투 시스템 콜백 설정
             this.setupSystemCallbacks();
@@ -273,6 +275,9 @@ class Game {
 
             // 카메라 업데이트
             cameraControls.updateCameraPosition();
+            
+            // 2D 체력바 위치 업데이트
+            healthBarUI.updateAllPositions(gameState.allCharacters);
 
             // 렌더링
             sceneSetup.render();
@@ -356,6 +361,9 @@ class Game {
         // 로그 초기화
         combatLog.clearLogs();
         fpsCounter.resetStats();
+        
+        // 체력바 초기화
+        healthBarUI.clearAll();
     }
 
     /**
@@ -376,6 +384,7 @@ class Game {
         // UI 제거
         combatLog.destroy();
         fpsCounter.destroy();
+        healthBarUI.destroy();
 
         console.log('게임이 완전히 종료되었습니다.');
     }
