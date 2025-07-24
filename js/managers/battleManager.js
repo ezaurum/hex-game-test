@@ -151,6 +151,8 @@ class BattleManager {
      * @param {Character} character - 사망한 캐릭터
      */
     handleCharacterDeath(character) {
+        console.log(`${character.name} 사망 처리 시작`);
+        
         // 즉시 처리
         character.isDead = true;
         
@@ -165,6 +167,8 @@ class BattleManager {
         // 애니메이션 큐에 추가
         actionQueue.enqueueDeath(character, {
             onComplete: () => {
+                console.log(`${character.name} 사망 애니메이션 완료`);
+                
                 if (this.callbacks.onCharacterDeath) {
                     this.callbacks.onCharacterDeath(character);
                 }
@@ -204,12 +208,16 @@ class BattleManager {
         const alivePlayerCount = gameState.getAlivePlayerCount();
         const aliveEnemyCount = gameState.getAliveEnemyCount();
         
+        console.log(`게임 종료 체크: 플레이어 ${alivePlayerCount}명, 적 ${aliveEnemyCount}명`);
+        
         if (alivePlayerCount === 0) {
+            console.log('플레이어 패배!');
             gameState.setGameState('player_lost');
             if (this.callbacks.onBattleEnd) {
                 this.callbacks.onBattleEnd('player_lost');
             }
         } else if (aliveEnemyCount === 0) {
+            console.log('플레이어 승리!');
             gameState.setGameState('player_won');
             if (this.callbacks.onBattleEnd) {
                 this.callbacks.onBattleEnd('player_won');
@@ -221,6 +229,9 @@ class BattleManager {
      * 턴 종료 체크
      */
     checkTurnEnd() {
+        // 게임 종료 체크 먼저
+        this.checkGameEnd();
+        
         // 플레이어 턴이고 모든 플레이어가 행동했으면 자동으로 턴 종료
         if (gameState.isPlayerTurn() && gameState.checkAllPlayersActed()) {
             // 턴 종료
@@ -352,6 +363,9 @@ class BattleManager {
                 // 사망 체크
                 if (target.health <= 0) {
                     this.handleCharacterDeath(target);
+                } else {
+                    // 사망하지 않았어도 게임 종료 체크 (다른 캐릭터가 이미 죽었을 수 있음)
+                    this.checkGameEnd();
                 }
             }
         });

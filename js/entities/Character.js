@@ -483,7 +483,7 @@ export class Character {
      * @returns {boolean}
      */
     isAlive() {
-        return this.health > 0;
+        return this.health > 0 && !this.isDead;
     }
 
     /**

@@ -40,7 +40,12 @@ export const GameEvents = {
     // UI 이벤트
     UI_UPDATE: 'ui:update',
     DAMAGE_TEXT: 'ui:damage:text',
-    SELECTION_CHANGED: 'selection:changed'
+    SELECTION_CHANGED: 'selection:changed',
+
+    // 입력 이벤트
+    INPUT_TILE_CLICKED: 'input:tile:clicked',
+    INPUT_CHARACTER_CLICKED: 'input:character:clicked',
+    INPUT_EMPTY_SPACE_CLICKED: 'input:empty_space:clicked'
 };
 
 /**
