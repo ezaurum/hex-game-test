@@ -47,17 +47,13 @@ export class MovementSystem {
      * @returns {boolean} 이동 시작 성공 여부
      */
     moveCharacter(character, targetTile, callback) {
-        console.log('movementSystem.moveCharacter called', { character: character.name, targetTile });
-        
         // 이동 가능 여부 확인
         if (!this.canMoveTo(character, targetTile)) {
-            console.log('Cannot move to target tile');
             return false;
         }
         
         // 경로 찾기
         const path = gridSystem.findPath(character.currentTile, targetTile);
-        console.log('Path found:', path.length, 'tiles');
         if (path.length === 0) {
             return false;
         }
@@ -65,7 +61,6 @@ export class MovementSystem {
         // 남은 이동 범위 확인
         const remainingMovement = character.movementRange - character.movedDistance;
         if (path.length > remainingMovement) {
-            console.log('Path too long:', path.length, '>', remainingMovement);
             return false;
         }
         
@@ -73,10 +68,7 @@ export class MovementSystem {
         this.clearMovementHighlights();
         
         // 배틀 매니저를 통한 이동
-        console.log('Calling battleManager.moveCharacter');
         const success = battleManager.moveCharacter(character, path);
-        console.log('battleManager.moveCharacter result:', success);
-        
         if (success) {
             // 콜백 설정
             const originalCallback = battleManager.callbacks.onMoveComplete;

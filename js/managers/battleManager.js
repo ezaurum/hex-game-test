@@ -50,11 +50,8 @@ class BattleManager {
     init() {
         if (this.initialized) return;
         
-        console.log('battleManager.init() called');
-        
         // 액션 핸들러 등록
         actionQueue.registerHandler(ActionType.MOVE, (data, options) => {
-            console.log('MOVE handler called', data);
             return animationController.createMoveAnimation(data, options);
         });
         
@@ -76,7 +73,6 @@ class BattleManager {
         };
         
         this.initialized = true;
-        console.log('battleManager initialized');
     }
     
     /**

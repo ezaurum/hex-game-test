@@ -90,7 +90,6 @@ class ActionQueue {
         };
         
         this.queue.push(action);
-        
         // 자동 실행 (이미 처리 중이 아닌 경우)
         if (!this.isProcessing && !this.isPaused) {
             this.processNext();
@@ -107,7 +106,6 @@ class ActionQueue {
      * @param {Object} options - 옵션
      */
     enqueueMove(character, path, options = {}) {
-        console.log('actionQueue.enqueueMove called', { character: character.name, pathLength: path.length });
         return this.enqueue(ActionType.MOVE, {
             character,
             path,
@@ -166,12 +164,6 @@ class ActionQueue {
      * 다음 액션 처리
      */
     async processNext() {
-        console.log('actionQueue.processNext called', { 
-            isPaused: this.isPaused, 
-            isProcessing: this.isProcessing, 
-            queueLength: this.queue.length 
-        });
-        
         if (this.isPaused || this.isProcessing || this.queue.length === 0) {
             if (this.queue.length === 0 && this.onQueueEmpty) {
                 this.onQueueEmpty();
@@ -181,12 +173,9 @@ class ActionQueue {
         
         this.isProcessing = true;
         this.currentAction = this.queue.shift();
-        console.log('Processing action:', this.currentAction.type, this.currentAction);
-        
         try {
             // 액션 타입별 핸들러 실행
             const handler = this.handlers.get(this.currentAction.type);
-            console.log('Handler found:', !!handler, 'for type:', this.currentAction.type);
             if (handler) {
                 await handler(this.currentAction.data, this.currentAction.options);
             }

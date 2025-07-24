@@ -57,11 +57,9 @@ class AnimationController {
      * @returns {Promise}
      */
     createMoveAnimation(data, options = {}) {
-        console.log('createMoveAnimation called', data);
         const { character, path } = data;
         
         return new Promise((resolve) => {
-            console.log('Promise created, skipMode:', this.skipMode);
             // 즉시 해결 (스킵 모드)
             if (this.skipMode) {
                 const finalPos = path[path.length - 1].getPixelPosition();
@@ -72,17 +70,14 @@ class AnimationController {
             }
             
             // 타임라인 생성
-            console.log('Creating timeline, gsap available:', typeof gsap !== 'undefined');
             const timeline = gsap.timeline({
                 onComplete: () => {
-                    console.log('Timeline complete');
                     character.playAnimation('Idle', true);
                     this.currentTimeline = null;
                     resolve();
                 }
             });
             
-            console.log('Timeline created:', timeline);
             this.currentTimeline = timeline;
             
             // 각 타일로의 이동 애니메이션
@@ -91,14 +86,9 @@ class AnimationController {
                 z: character.group.position.z
             };
             
-            console.log('Character group:', character.group, 'position:', character.group?.position);
-            console.log('Path tiles:', path.length);
-            
             path.forEach((tile, index) => {
                 const pos = tile.getPixelPosition();
-                console.log(`Tile ${index} position:`, pos);
                 const duration = (ANIMATION.MOVEMENT_DURATION * 0.8 / this.animationSpeed) / 1000; // ms to seconds
-                console.log('Animation duration (seconds):', duration);
                 
                 // 회전
                 const direction = {
@@ -110,7 +100,6 @@ class AnimationController {
                     const angle = Math.atan2(direction.x, direction.z);
                     
                     timeline.call(() => {
-                        console.log('Rotating character to angle:', angle);
                         character.facingDirection = angle;
                         const rotationTarget = character.model || character.mesh;
                         if (rotationTarget) {
@@ -119,8 +108,6 @@ class AnimationController {
                                 duration: 0.2 / this.animationSpeed,
                                 ease: 'power2.inOut'
                             });
-                        } else {
-                            console.log('No rotation target found (model or mesh)');
                         }
                     });
                 }
@@ -128,21 +115,18 @@ class AnimationController {
                 // 걷기 애니메이션 시작
                 if (index === 0) {
                     timeline.call(() => {
-                        console.log('Starting walk animation');
                         character.playAnimation('Walk', true);
                         soundSystem.playMove();
                     });
                 }
                 
                 // 이동
-                console.log('Adding movement tween from', character.group.position, 'to', { x: pos.x, z: pos.z });
                 timeline.to(character.group.position, {
                     x: pos.x,
                     z: pos.z,
                     duration: duration,
                     ease: 'power2.inOut',
-                    onStart: () => console.log('Movement tween started'),
-                    onComplete: () => console.log('Movement tween completed')
+                    ease: 'power2.inOut'
                 });
                 
                 // 점프 효과
@@ -162,7 +146,6 @@ class AnimationController {
                 timeline.call(options.onComplete);
             }
             
-            console.log('Starting timeline playback');
             timeline.play();
         });
     }
@@ -228,7 +211,7 @@ class AnimationController {
                 .to(attacker.group.position, {
                     x: attackerPos.x + direction.x * 0.5,
                     z: attackerPos.z + direction.z * 0.5,
-                    duration: ANIMATION.ATTACK_DURATION * 0.4 / this.animationSpeed,
+                    duration: (ANIMATION.ATTACK_DURATION * 0.4 / this.animationSpeed) / 1000,
                     ease: 'power2.in'
                 })
                 
@@ -259,7 +242,7 @@ class AnimationController {
                 .to(attacker.group.position, {
                     x: attackerPos.x,
                     z: attackerPos.z,
-                    duration: ANIMATION.ATTACK_DURATION * 0.4 / this.animationSpeed,
+                    duration: (ANIMATION.ATTACK_DURATION * 0.4 / this.animationSpeed) / 1000,
                     ease: 'power2.out'
                 })
                 
