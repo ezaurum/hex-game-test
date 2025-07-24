@@ -233,6 +233,12 @@ class AnimationController {
                     // 피격 애니메이션
                     target.playAnimation('Hit', false);
                     
+                    // 데미지 텍스트 표시
+                    this.showDamageText(target, damage);
+                    
+                    // 체력바 업데이트
+                    healthBarUI.updateHealthBar(target);
+                    
                     // UI 업데이트 콜백
                     if (options.onHit) {
                         options.onHit();
@@ -276,37 +282,15 @@ class AnimationController {
     }
     
     /**
-     * 데미지 애니메이션 생성
+     * 데미지 애니메이션 생성 (더 이상 사용하지 않음)
      * 
      * @param {Object} data - 데미지 데이터
      * @param {Object} options - 옵션
      * @returns {Promise}
      */
     createDamageAnimation(data, options = {}) {
-        const { target, damage } = data;
-        
-        return new Promise((resolve) => {
-            // 즉시 해결 (스킵 모드)
-            if (this.skipMode) {
-                healthBarUI.updateHealthBar(target);
-                resolve();
-                return;
-            }
-            
-            // 데미지 텍스트 표시
-            this.showDamageText(target, damage);
-            
-            // 체력바 애니메이션
-            gsap.to(target, {
-                duration: 0.3 / this.animationSpeed,
-                onUpdate: () => {
-                    healthBarUI.updateHealthBar(target);
-                },
-                onComplete: () => {
-                    resolve();
-                }
-            });
-        });
+        // 공격 애니메이션에 통합되어 더 이상 별도로 호출되지 않음
+        return Promise.resolve();
     }
     
     /**

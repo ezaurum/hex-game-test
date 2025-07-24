@@ -12,6 +12,7 @@ import { sceneSetup } from '../core/sceneSetup.js';
 import { gridSystem } from '../systems/gridSystem.js';
 import { movementSystem } from '../systems/movementSystem.js';
 import { combatSystem } from '../systems/combatSystem.js';
+import { battleManager } from '../managers/battleManager.js';
 import { aiSystem } from '../systems/aiSystem.js';
 import { TURN_TYPE, CHARACTER_TYPE } from '../core/constants.js';
 import { createParticleEffect } from '../utils/animation.js';
@@ -400,15 +401,13 @@ export class InputHandler {
      * @param {Character} target
      */
     performAttack(attacker, target) {
-        combatSystem.performAttack(attacker, target, () => {
+        // battleManager를 통해 공격 수행
+        const damage = battleManager.performAttack(attacker, target);
+        
+        if (damage > 0) {
             // 공격 후 처리
             movementSystem.clearAllHighlights();
-            
-            // 모든 행동 완료 시 자동 턴 종료 (옵션)
-            if (attacker.hasAttacked && attacker.hasMoved) {
-                this.checkAutoEndTurn();
-            }
-        });
+        }
     }
     
     /**

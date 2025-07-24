@@ -78,11 +78,11 @@ class BattleManager {
         
         // 애니메이션 완료 이벤트 구독
         eventBus.on(GameEvents.MOVE_ANIMATION_COMPLETE, () => {
-            eventBus.emit(GameEvents.CHECK_TURN_END);
+            // 이벤트만 기록, 턴 체크는 onQueueEmpty에서 처리
         });
         
         eventBus.on(GameEvents.ATTACK_ANIMATION_COMPLETE, () => {
-            eventBus.emit(GameEvents.CHECK_TURN_END);
+            // 이벤트만 기록, 턴 체크는 onQueueEmpty에서 처리
         });
         
         eventBus.on(GameEvents.CHECK_TURN_END, () => {
@@ -149,17 +149,13 @@ class BattleManager {
         attacker.hasAttacked = true;
         target.health = Math.max(0, target.health - damage);
         
-        // 애니메이션 큐에 추가
+        // 애니메이션 큐에 추가 (공격과 데미지를 하나의 액션으로 처리)
         actionQueue.enqueueAttack(attacker, target, damage, {
             onHit: () => {
-                // 데미지 애니메이션 추가
-                actionQueue.enqueueDamage(target, damage, {
-                    onComplete: () => {
-                        if (this.callbacks.onDamageDealt) {
-                            this.callbacks.onDamageDealt(attacker, target, damage);
-                        }
-                    }
-                });
+                // 데미지 처리는 공격 애니메이션 내부에서 처리됨
+                if (this.callbacks.onDamageDealt) {
+                    this.callbacks.onDamageDealt(attacker, target, damage);
+                }
                 
                 // 사망 체크
                 if (target.health <= 0) {
@@ -261,6 +257,8 @@ class BattleManager {
      */
     onQueueEmpty() {
         // 현재 턴의 모든 액션이 완료됨
+        // 턴 종료 체크
+        this.checkTurnEnd();
     }
     
     /**

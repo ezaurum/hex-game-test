@@ -243,21 +243,27 @@ class GameState {
      * @returns {boolean}
      */
     checkAllPlayersActed() {
-        // 살아있는 플레이어들이 모두 이동하거나 공격했는지 확인
+        // 살아있는 플레이어들이 모두 행동을 완료했는지 확인
         const alivePlayerCharacters = this.playerCharacters.filter(char => char.isAlive());
         
         return alivePlayerCharacters.every(char => {
-            // 이동했거나 공격했으면 행동 완료
-            // 이동만 하고 공격할 수 없는 상황(주변에 적이 없음)도 행동 완료로 간주
-            const hasActed = char.hasMoved || char.hasAttacked;
+            // 캐릭터가 더 이상 행동할 수 없는 경우를 확인
             
-            // 이동은 했지만 공격은 안 한 경우, 공격 가능한 적이 있는지 확인
-            if (char.hasMoved && !char.hasAttacked && char.movementRange === char.movedDistance) {
-                // 이동을 다 써서 더 이상 이동할 수 없으면 행동 완료
+            // 1. 이미 공격했으면 행동 완료
+            if (char.hasAttacked) {
                 return true;
             }
             
-            return hasActed;
+            // 2. 이동력을 모두 소진했으면 행동 완료
+            if (char.movedDistance >= char.movementRange) {
+                return true;
+            }
+            
+            // 3. 이동은 했지만 더 이상 행동할 수 없는 경우
+            // (예: 주변에 공격할 적이 없고 이동도 더 할 수 없음)
+            // 이는 실제 게임 상황에서 판단해야 하므로 현재는 false 반환
+            
+            return false;
         });
     }
     
