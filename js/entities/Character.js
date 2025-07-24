@@ -185,19 +185,32 @@ export class Character {
             : COLORS.CHARACTER_ENEMY;
 
         // 임시 placeholder 메시 생성 (모델 로드 전까지 표시)
-        const bodyGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.8, 8);
+        // 몸통
+        const bodyGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.6, 8);
         const bodyMaterial = new THREE.MeshPhongMaterial({
-            color: color,
-            flatShading: true,
-            opacity: 0.3,
-            transparent: true
+            color: 0x666666, // 중성 회색
+            flatShading: true
         });
-        const placeholderMesh = new THREE.Mesh(bodyGeometry, bodyMaterial);
-        placeholderMesh.position.y = 0.4;
+        const bodyMesh = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        bodyMesh.position.y = 0.3;
+        
+        // 머리
+        const headGeometry = new THREE.SphereGeometry(0.2, 8, 6);
+        const headMaterial = new THREE.MeshPhongMaterial({
+            color: color, // 팀 색상
+            flatShading: true
+        });
+        const headMesh = new THREE.Mesh(headGeometry, headMaterial);
+        headMesh.position.y = 0.7;
+        headMesh.name = 'head'; // 머리 식별용
+        
+        const placeholderGroup = new THREE.Group();
+        placeholderGroup.add(bodyMesh);
+        placeholderGroup.add(headMesh);
 
         // 그룹에 추가
         this.mesh = new THREE.Group();
-        this.mesh.add(placeholderMesh);
+        this.mesh.add(placeholderGroup);
 
         // 리소스 매니저에서 모델 가져오기
         const robotGltf = resourceManager.getModel('robot');
@@ -294,27 +307,36 @@ export class Character {
         // mesh 전체를 순회하며 material 업데이트
         this.mesh.traverse(child => {
             if (child.isMesh && child.material) {
+                // 머리 부분인지 확인
+                const isHead = child.name.toLowerCase().includes('head') || 
+                              child.name.toLowerCase().includes('face') ||
+                              child.position.y > 1.5;
+                
                 if (allActionsComplete) {
-                    // 모든 행동 완료 - 회색조로 표현
-                    child.material.color = new THREE.Color(0x808080);
-                    if (!this.isSelected) {
-                        child.material.emissive = new THREE.Color(0x000000);
-                        child.material.emissiveIntensity = 0;
-                    }
+                    // 모든 행동 완료 - 어두운 회색조로 표현
+                    child.material.color = new THREE.Color(0x333333);
+                    child.material.emissive = new THREE.Color(0x000000);
+                    child.material.emissiveIntensity = 0;
                 } else {
                     // 행동 가능 - 원래 색상
-                    const baseColor = this.type === CHARACTER_TYPE.PLAYER ? COLORS.PLAYER : COLORS.ENEMY;
-                    child.material.color = new THREE.Color(baseColor);
+                    if (isHead) {
+                        // 머리만 팀 색상
+                        const baseColor = this.type === CHARACTER_TYPE.PLAYER ? COLORS.CHARACTER_PLAYER : COLORS.CHARACTER_ENEMY;
+                        child.material.color = new THREE.Color(baseColor);
+                    } else {
+                        // 몸통은 중성 회색
+                        child.material.color = new THREE.Color(0x666666);
+                    }
                     
-                    // 부분적 행동 가능 상태 표시
+                    // 부분적 행동 가능 상태 표시 - 발광으로만
                     if (!hasUsedAllMoves && hasUsedAllAttacks) {
-                        // 이동만 가능 - 약간 파란색 발광
+                        // 이동만 가능 - 파란색 발광
                         child.material.emissive = new THREE.Color(0x0066ff);
-                        child.material.emissiveIntensity = 0.1;
+                        child.material.emissiveIntensity = 0.2;
                     } else if (hasUsedAllMoves && !hasUsedAllAttacks) {
-                        // 공격만 가능 - 약간 빨간색 발광
+                        // 공격만 가능 - 빨간색 발광
                         child.material.emissive = new THREE.Color(0xff0000);
-                        child.material.emissiveIntensity = 0.1;
+                        child.material.emissiveIntensity = 0.2;
                     } else if (!this.isSelected) {
                         child.material.emissive = new THREE.Color(0x000000);
                         child.material.emissiveIntensity = 0;
