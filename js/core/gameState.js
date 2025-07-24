@@ -9,6 +9,7 @@
  */
 
 import { GAME_STATE, TURN_TYPE } from './constants.js';
+import { eventBus, GameEvents } from './eventBus.js';
 
 /**
  * 게임 상태 클래스
@@ -101,6 +102,9 @@ class GameState {
         
         // 공격 모드 초기화
         this.isAttackMode = false;
+        
+        // 선택 변경 이벤트 발생
+        eventBus.emit(GameEvents.SELECTION_CHANGED, { character });
     }
     
     /**
@@ -112,6 +116,9 @@ class GameState {
         }
         this.selectedCharacter = null;
         this.isAttackMode = false;
+        
+        // 선택 해제 이벤트 발생
+        eventBus.emit(GameEvents.SELECTION_CHANGED, { character: null });
     }
     
     /**
@@ -150,6 +157,11 @@ class GameState {
         // 선택 상태 초기화
         this.clearSelection();
         
+        // 턴 변경 이벤트 발생
+        eventBus.emit(GameEvents.TURN_CHANGED, {
+            turn: this.currentTurn,
+            turnCount: this.turnCount
+        });
         
         return this.currentTurn;
     }

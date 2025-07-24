@@ -39,6 +39,7 @@ import { healthBarUI } from './ui/healthBarUI.js';
 import { animationControl } from './ui/animationControl.js';
 import { replayControl } from './ui/replayControl.js';
 import { replayIndicator } from './ui/replayIndicator.js';
+import { turnControl } from './ui/turnControl.js';
 
 /**
  * 게임 메인 클래스
@@ -97,6 +98,7 @@ class Game {
             animationControl.init();
             replayControl.init();
             replayIndicator.init();
+            turnControl.init();
 
             // 배틀 매니저 초기화
             battleManager.init();
@@ -411,6 +413,7 @@ class Game {
         animationControl.destroy();
         replayControl.destroy();
         replayIndicator.destroy();
+        turnControl.destroy();
         
         // 커맨드 히스토리 초기화
         commandHistory.clear();

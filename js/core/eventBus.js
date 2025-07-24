@@ -25,6 +25,8 @@ export const GameEvents = {
     TURN_START: 'turn:start',
     TURN_END: 'turn:end',
     CHECK_TURN_END: 'turn:check',
+    TURN_CHANGED: 'turn:changed',
+    CHARACTER_TURN_ENDED: 'character:turn:ended',
     
     // 캐릭터 액션 이벤트
     CHARACTER_MOVED: 'character:moved',
@@ -37,7 +39,8 @@ export const GameEvents = {
     
     // UI 이벤트
     UI_UPDATE: 'ui:update',
-    DAMAGE_TEXT: 'ui:damage:text'
+    DAMAGE_TEXT: 'ui:damage:text',
+    SELECTION_CHANGED: 'selection:changed'
 };
 
 /**

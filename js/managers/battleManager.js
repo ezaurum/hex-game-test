@@ -305,6 +305,8 @@ class BattleManager {
                 if (this.callbacks.onMoveComplete) {
                     this.callbacks.onMoveComplete(character);
                 }
+                // 이동 완료 이벤트 발생
+                eventBus.emit(GameEvents.CHARACTER_MOVED, { character });
             }
         });
         
@@ -337,6 +339,9 @@ class BattleManager {
                 if (this.callbacks.onDamageDealt) {
                     this.callbacks.onDamageDealt(attacker, target, damage);
                 }
+                
+                // 공격 완료 이벤트 발생
+                eventBus.emit(GameEvents.CHARACTER_ATTACKED, { attacker, target, damage });
                 
                 // 사망 체크
                 if (target.health <= 0) {
