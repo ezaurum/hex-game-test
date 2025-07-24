@@ -194,6 +194,9 @@ class ActionQueue {
         // 다음 액션 처리
         if (!this.isPaused && this.queue.length > 0) {
             this.processNext();
+        } else if (this.queue.length === 0 && this.onQueueEmpty) {
+            // 큐가 비었을 때도 체크
+            this.onQueueEmpty();
         }
     }
     

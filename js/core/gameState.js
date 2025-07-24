@@ -239,6 +239,29 @@ class GameState {
     }
     
     /**
+     * 모든 플레이어가 행동을 완료했는지 확인
+     * @returns {boolean}
+     */
+    checkAllPlayersActed() {
+        // 살아있는 플레이어들이 모두 이동하거나 공격했는지 확인
+        const alivePlayerCharacters = this.playerCharacters.filter(char => char.isAlive());
+        
+        return alivePlayerCharacters.every(char => {
+            // 이동했거나 공격했으면 행동 완료
+            // 이동만 하고 공격할 수 없는 상황(주변에 적이 없음)도 행동 완료로 간주
+            const hasActed = char.hasMoved || char.hasAttacked;
+            
+            // 이동은 했지만 공격은 안 한 경우, 공격 가능한 적이 있는지 확인
+            if (char.hasMoved && !char.hasAttacked && char.movementRange === char.movedDistance) {
+                // 이동을 다 써서 더 이상 이동할 수 없으면 행동 완료
+                return true;
+            }
+            
+            return hasActed;
+        });
+    }
+    
+    /**
      * 게임 상태 초기화
      */
     reset() {

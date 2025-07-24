@@ -11,6 +11,7 @@ import { gsap } from 'https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js';
 import { soundSystem } from './soundSystem.js';
 import { healthBarUI } from '../ui/healthBarUI.js';
 import { ANIMATION } from '../core/constants.js';
+import { eventBus, GameEvents } from '../core/eventBus.js';
 
 /**
  * 애니메이션 컨트롤러 클래스
@@ -74,6 +75,10 @@ class AnimationController {
                 onComplete: () => {
                     character.playAnimation('Idle', true);
                     this.currentTimeline = null;
+                    
+                    // 이동 완료 이벤트 발생
+                    eventBus.emit(GameEvents.MOVE_ANIMATION_COMPLETE, { character });
+                    
                     resolve();
                 }
             });
@@ -173,6 +178,10 @@ class AnimationController {
             const timeline = gsap.timeline({
                 onComplete: () => {
                     this.currentTimeline = null;
+                    
+                    // 공격 완료 이벤트 발생
+                    eventBus.emit(GameEvents.ATTACK_ANIMATION_COMPLETE, { attacker });
+                    
                     resolve();
                 }
             });

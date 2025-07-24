@@ -11,6 +11,8 @@ import { actionQueue, ActionType } from '../systems/actionQueue.js';
 import { animationController } from '../systems/animationController.js';
 import { gameState } from '../core/gameState.js';
 import { healthBarUI } from '../ui/healthBarUI.js';
+import { inputHandler } from '../controls/inputHandler.js';
+import { eventBus, GameEvents } from '../core/eventBus.js';
 
 /**
  * 배틀 매니저 클래스
@@ -73,6 +75,19 @@ class BattleManager {
         };
         
         this.initialized = true;
+        
+        // 애니메이션 완료 이벤트 구독
+        eventBus.on(GameEvents.MOVE_ANIMATION_COMPLETE, () => {
+            eventBus.emit(GameEvents.CHECK_TURN_END);
+        });
+        
+        eventBus.on(GameEvents.ATTACK_ANIMATION_COMPLETE, () => {
+            eventBus.emit(GameEvents.CHECK_TURN_END);
+        });
+        
+        eventBus.on(GameEvents.CHECK_TURN_END, () => {
+            this.checkTurnEnd();
+        });
     }
     
     /**
@@ -229,11 +244,23 @@ class BattleManager {
     }
     
     /**
+     * 턴 종료 체크
+     */
+    checkTurnEnd() {
+        // 플레이어 턴이고 모든 플레이어가 행동했으면 자동으로 턴 종료
+        if (gameState.isPlayerTurn() && gameState.checkAllPlayersActed()) {
+            // 턴 종료
+            if (inputHandler && inputHandler.endPlayerTurn) {
+                inputHandler.endPlayerTurn();
+            }
+        }
+    }
+    
+    /**
      * 큐 비었을 때 처리
      */
     onQueueEmpty() {
         // 현재 턴의 모든 액션이 완료됨
-        console.log('All animations completed');
     }
     
     /**
