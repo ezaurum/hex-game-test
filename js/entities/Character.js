@@ -112,6 +112,12 @@ export class Character {
          * @type {boolean}
          */
         this.hasAttacked = false;
+        
+        /**
+         * 현재 공격에서 데미지를 입혔는지 여부 (중복 방지)
+         * @type {boolean}
+         */
+        this.hasDealtDamage = false;
 
         /**
          * 선택 상태
@@ -386,13 +392,28 @@ export class Character {
             target.group.position.z - this.group.position.z
         ).normalize();
 
-        // Face the target
-        const angle = Math.atan2(direction.x, direction.z);
-        this.facingDirection = angle;
+        // 공격자가 타겟을 바라보기
+        const attackerAngle = Math.atan2(direction.x, direction.z);
+        this.facingDirection = attackerAngle;
         if (this.model) {
-            this.model.rotation.y = angle;
+            this.model.rotation.y = attackerAngle;
         } else if (this.mesh) {
-            this.mesh.rotation.y = angle;
+            this.mesh.rotation.y = attackerAngle;
+        }
+
+        // 타겟이 공격자를 바라보기 (공격 시작 전에)
+        const targetDirection = new THREE.Vector3(
+            this.group.position.x - target.group.position.x,
+            0,
+            this.group.position.z - target.group.position.z
+        ).normalize();
+        
+        const targetAngle = Math.atan2(targetDirection.x, targetDirection.z);
+        target.facingDirection = targetAngle;
+        if (target.model) {
+            target.model.rotation.y = targetAngle;
+        } else if (target.mesh) {
+            target.mesh.rotation.y = targetAngle;
         }
 
         // Play attack animation
@@ -417,16 +438,22 @@ export class Character {
                 this.group.position.z = originalPos.z + direction.z * backward * 0.3;
             }
 
+            // 공격이 적중하는 타이밍 (전진이 최대일 때)
+            if (elapsed >= duration * 0.4 && elapsed < duration * 0.5 && !this.hasDealtDamage) {
+                this.hasDealtDamage = true;
+                // 데미지 적용 및 피격 애니메이션 시작
+                target.takeDamage(damage, this);
+            }
+
             if (progress < 1) {
                 requestAnimationFrame(animate);
             } else {
-                // 데미지 적용
-                target.takeDamage(damage);
                 this.hasAttacked = true;
+                this.hasDealtDamage = false; // 리셋
                 // Return to idle animation
                 setTimeout(() => {
                     this.playAnimation('Idle', true);
-                }, 300);
+                }, 100);
                 if (onComplete) onComplete();
             }
         };
@@ -440,10 +467,36 @@ export class Character {
      * 데미지 받기
      *
      * @param {number} damage - 받을 데미지
+     * @param {Character} [attacker] - 공격자 (선택적)
      */
-    takeDamage(damage) {
+    takeDamage(damage, attacker) {
         this.health = Math.max(0, this.health - damage);
         healthBarUI.updateHealthBar(this);
+
+        // 피격 애니메이션 재생
+        this.playAnimation('Hit', false);
+        
+        // 피격 애니메이션이 없으면 몸을 뒤로 젖히는 효과
+        if (!this.animations || !this.animations['Hit']) {
+            const originalRotation = this.model ? this.model.rotation.x : (this.mesh ? this.mesh.rotation.x : 0);
+            const hitTarget = this.model || this.mesh;
+            
+            if (hitTarget) {
+                // 뒤로 젖히기
+                hitTarget.rotation.x = -0.2;
+                
+                // 원래 자세로 복구
+                setTimeout(() => {
+                    hitTarget.rotation.x = originalRotation;
+                    this.playAnimation('Idle', true);
+                }, 300);
+            }
+        } else {
+            // Hit 애니메이션이 끝나면 Idle로 복귀
+            setTimeout(() => {
+                this.playAnimation('Idle', true);
+            }, 500);
+        }
 
         // 피격 효과 (빨간색 플래시)
         const originalColors = new Map();
