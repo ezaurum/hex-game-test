@@ -278,6 +278,51 @@ export class Character {
         this.group.position.x = x;
         this.group.position.z = z;
     }
+    
+    /**
+     * 행동 상태에 따른 시각적 표현 업데이트
+     */
+    updateActionVisual() {
+        if (!this.mesh) return;
+        
+        // 모든 행동을 완료했는지 확인
+        const hasUsedAllMoves = this.actionsUsed.move >= this.actionsPerTurn.move || 
+                               this.movedDistance >= this.movementRange;
+        const hasUsedAllAttacks = this.actionsUsed.attack >= this.actionsPerTurn.attack;
+        const allActionsComplete = hasUsedAllMoves && hasUsedAllAttacks;
+        
+        // mesh 전체를 순회하며 material 업데이트
+        this.mesh.traverse(child => {
+            if (child.isMesh && child.material) {
+                if (allActionsComplete) {
+                    // 모든 행동 완료 - 회색조로 표현
+                    child.material.color = new THREE.Color(0x808080);
+                    if (!this.isSelected) {
+                        child.material.emissive = new THREE.Color(0x000000);
+                        child.material.emissiveIntensity = 0;
+                    }
+                } else {
+                    // 행동 가능 - 원래 색상
+                    const baseColor = this.type === CHARACTER_TYPE.PLAYER ? COLORS.PLAYER : COLORS.ENEMY;
+                    child.material.color = new THREE.Color(baseColor);
+                    
+                    // 부분적 행동 가능 상태 표시
+                    if (!hasUsedAllMoves && hasUsedAllAttacks) {
+                        // 이동만 가능 - 약간 파란색 발광
+                        child.material.emissive = new THREE.Color(0x0066ff);
+                        child.material.emissiveIntensity = 0.1;
+                    } else if (hasUsedAllMoves && !hasUsedAllAttacks) {
+                        // 공격만 가능 - 약간 빨간색 발광
+                        child.material.emissive = new THREE.Color(0xff0000);
+                        child.material.emissiveIntensity = 0.1;
+                    } else if (!this.isSelected) {
+                        child.material.emissive = new THREE.Color(0x000000);
+                        child.material.emissiveIntensity = 0;
+                    }
+                }
+            }
+        });
+    }
 
     /**
      * 다른 타일로 이동 (로직만 처리)
@@ -380,9 +425,9 @@ export class Character {
                     child.material.emissive = new THREE.Color(COLORS.CHARACTER_SELECTED);
                     child.material.emissiveIntensity = 0.3;
                 } else {
-                    // 강조 제거
-                    child.material.emissive = new THREE.Color(0x000000);
-                    child.material.emissiveIntensity = 0;
+                    // 강조 제거 - 행동 상태에 따라 업데이트
+                    this.updateActionVisual();
+                    return;
                 }
             }
         });

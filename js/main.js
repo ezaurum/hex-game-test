@@ -186,6 +186,7 @@ class Game {
                 );
                 gameState.addCharacter(player);
                 sceneSetup.scene.add(player.group);
+                player.updateActionVisual();
             }
         });
 
@@ -206,6 +207,7 @@ class Game {
                 );
                 gameState.addCharacter(enemy);
                 sceneSetup.scene.add(enemy.group);
+                enemy.updateActionVisual();
             }
         });
 

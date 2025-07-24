@@ -158,6 +158,9 @@ class TurnControl {
         selectedCharacter.actionsUsed.move = selectedCharacter.actionsPerTurn.move;
         selectedCharacter.actionsUsed.attack = selectedCharacter.actionsPerTurn.attack;
         
+        // 행동 상태 시각화 업데이트
+        selectedCharacter.updateActionVisual();
+        
         // 선택 해제
         gameState.clearSelection();
         
@@ -189,6 +192,9 @@ class TurnControl {
                 character.movedDistance = character.movementRange;
                 character.actionsUsed.move = character.actionsPerTurn.move;
                 character.actionsUsed.attack = character.actionsPerTurn.attack;
+                
+                // 행동 상태 시각화 업데이트
+                character.updateActionVisual();
             }
         });
         

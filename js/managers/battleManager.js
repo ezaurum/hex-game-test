@@ -299,6 +299,9 @@ class BattleManager {
         character.movedDistance += path.length;
         character.actionsUsed.move++;
         
+        // 행동 상태 시각화 업데이트
+        character.updateActionVisual();
+        
         // 애니메이션 큐에 추가
         actionQueue.enqueueMove(character, path, {
             onComplete: () => {
@@ -331,6 +334,9 @@ class BattleManager {
         attacker.hasAttacked = true;
         attacker.actionsUsed.attack++;
         target.health = Math.max(0, target.health - damage);
+        
+        // 행동 상태 시각화 업데이트
+        attacker.updateActionVisual();
         
         // 애니메이션 큐에 추가 (공격과 데미지를 하나의 액션으로 처리)
         actionQueue.enqueueAttack(attacker, target, damage, {
