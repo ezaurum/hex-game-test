@@ -16,6 +16,8 @@ import { battleManager } from '../managers/battleManager.js';
 import { aiSystem } from '../systems/aiSystem.js';
 import { TURN_TYPE, CHARACTER_TYPE } from '../core/constants.js';
 import { createParticleEffect } from '../utils/animation.js';
+import { commandHistory } from '../managers/commandHistory.js';
+import { EndTurnCommand } from '../commands/EndTurnCommand.js';
 
 /**
  * 입력 핸들러 클래스
@@ -511,21 +513,33 @@ export class InputHandler {
         gameState.clearSelection();
         movementSystem.clearAllHighlights();
         
-        // 턴 전환
-        gameState.endTurn();
+        // 턴 종료 커맨드 생성 및 실행
+        const command = new EndTurnCommand({
+            previousTurn: gameState.currentTurn,
+            turnCount: gameState.turnCount
+        });
         
-        // 적 턴 시작
-        if (gameState.currentTurn === TURN_TYPE.ENEMY) {
-            this.enabled = false; // 적 턴 동안 입력 비활성화
-            
-            setTimeout(() => {
-                aiSystem.executeEnemyTurn(() => {
-                    // 적 턴 종료 후 플레이어 턴으로
-                    gameState.endTurn();
-                    this.enabled = true;
-                });
-            }, 500);
-        }
+        commandHistory.execute(command).then(success => {
+            if (success && gameState.currentTurn === TURN_TYPE.ENEMY) {
+                this.enabled = false; // 적 턴 동안 입력 비활성화
+                
+                setTimeout(() => {
+                    aiSystem.executeEnemyTurn(() => {
+                        // 적 턴 종료도 커맨드로 처리
+                        const endEnemyTurnCommand = new EndTurnCommand({
+                            previousTurn: gameState.currentTurn,
+                            turnCount: gameState.turnCount
+                        });
+                        
+                        commandHistory.execute(endEnemyTurnCommand).then(success => {
+                            if (success) {
+                                this.enabled = true;
+                            }
+                        });
+                    });
+                }, 500);
+            }
+        });
     }
     
     /**

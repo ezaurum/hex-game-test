@@ -13,6 +13,9 @@ import { gameState } from '../core/gameState.js';
 import { healthBarUI } from '../ui/healthBarUI.js';
 import { inputHandler } from '../controls/inputHandler.js';
 import { eventBus, GameEvents } from '../core/eventBus.js';
+import { commandHistory } from './commandHistory.js';
+import { MoveCommand } from '../commands/MoveCommand.js';
+import { AttackCommand } from '../commands/AttackCommand.js';
 
 /**
  * 배틀 매니저 클래스
@@ -102,33 +105,15 @@ class BattleManager {
             return false;
         }
         
-        // 즉시 로직 처리
-        const startTile = character.currentTile;
-        const endTile = path[path.length - 1];
-        
-        // 타일 점유 상태 업데이트
-        if (startTile) {
-            startTile.removeOccupant();
-        }
-        
-        character.currentTile = endTile;
-        endTile.setOccupant(character, false); // 위치는 애니메이션이 처리
-        
-        // 캐릭터 상태 업데이트
-        character.hasMoved = true;
-        character.movedDistance += path.length;
-        character.actionsUsed.move++;
-        
-        // 애니메이션 큐에 추가
-        actionQueue.enqueueMove(character, path, {
-            onComplete: () => {
-                if (this.callbacks.onMoveComplete) {
-                    this.callbacks.onMoveComplete(character);
-                }
-            }
+        // 커맨드 생성 및 실행
+        const command = new MoveCommand({
+            character: character,
+            fromTile: character.currentTile,
+            toTile: path[path.length - 1],
+            path: path
         });
         
-        return true;
+        return commandHistory.execute(command);
     }
     
     /**
@@ -143,30 +128,21 @@ class BattleManager {
             return 0;
         }
         
-        // 데미지 계산 (즉시)
-        const damage = this.calculateDamage(attacker, target);
-        
-        // 상태 업데이트 (즉시)
-        attacker.hasAttacked = true;
-        attacker.actionsUsed.attack++;
-        target.health = Math.max(0, target.health - damage);
-        
-        // 애니메이션 큐에 추가 (공격과 데미지를 하나의 액션으로 처리)
-        actionQueue.enqueueAttack(attacker, target, damage, {
-            onHit: () => {
-                // 데미지 처리는 공격 애니메이션 내부에서 처리됨
-                if (this.callbacks.onDamageDealt) {
-                    this.callbacks.onDamageDealt(attacker, target, damage);
-                }
-                
-                // 사망 체크
-                if (target.health <= 0) {
-                    this.handleCharacterDeath(target);
-                }
-            }
+        // 커맨드 생성 및 실행
+        const command = new AttackCommand({
+            attacker: attacker,
+            target: target
         });
         
-        return damage;
+        commandHistory.execute(command).then(success => {
+            if (success && command.data.damage > 0) {
+                return command.data.damage;
+            }
+            return 0;
+        });
+        
+        // 동기적 반환을 위해 데미지 계산만 미리 수행
+        return this.calculateDamage(attacker, target);
     }
     
     /**
@@ -293,6 +269,83 @@ class BattleManager {
      */
     skipAll() {
         actionQueue.skipAll();
+    }
+    
+    /**
+     * 실제 이동 처리 (커맨드에서 호출)
+     * @param {Character} character - 캐릭터
+     * @param {Array<HexTile>} path - 이동 경로
+     * @returns {boolean} 이동 성공 여부
+     */
+    executeMove(character, path) {
+        if (!character || !path || path.length === 0) {
+            return false;
+        }
+        
+        // 즉시 로직 처리
+        const startTile = character.currentTile;
+        const endTile = path[path.length - 1];
+        
+        // 타일 점유 상태 업데이트
+        if (startTile) {
+            startTile.removeOccupant();
+        }
+        
+        character.currentTile = endTile;
+        endTile.setOccupant(character, false); // 위치는 애니메이션이 처리
+        
+        // 캐릭터 상태 업데이트
+        character.hasMoved = true;
+        character.movedDistance += path.length;
+        character.actionsUsed.move++;
+        
+        // 애니메이션 큐에 추가
+        actionQueue.enqueueMove(character, path, {
+            onComplete: () => {
+                if (this.callbacks.onMoveComplete) {
+                    this.callbacks.onMoveComplete(character);
+                }
+            }
+        });
+        
+        return true;
+    }
+    
+    /**
+     * 실제 공격 처리 (커맨드에서 호출)
+     * @param {Character} attacker - 공격자
+     * @param {Character} target - 대상
+     * @returns {number} 데미지 (0이면 실패)
+     */
+    executeAttack(attacker, target) {
+        if (!attacker || !target || attacker.hasAttacked) {
+            return 0;
+        }
+        
+        // 데미지 계산 (즉시)
+        const damage = this.calculateDamage(attacker, target);
+        
+        // 상태 업데이트 (즉시)
+        attacker.hasAttacked = true;
+        attacker.actionsUsed.attack++;
+        target.health = Math.max(0, target.health - damage);
+        
+        // 애니메이션 큐에 추가 (공격과 데미지를 하나의 액션으로 처리)
+        actionQueue.enqueueAttack(attacker, target, damage, {
+            onHit: () => {
+                // 데미지 처리는 공격 애니메이션 내부에서 처리됨
+                if (this.callbacks.onDamageDealt) {
+                    this.callbacks.onDamageDealt(attacker, target, damage);
+                }
+                
+                // 사망 체크
+                if (target.health <= 0) {
+                    this.handleCharacterDeath(target);
+                }
+            }
+        });
+        
+        return damage;
     }
     
     /**

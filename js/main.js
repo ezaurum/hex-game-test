@@ -26,6 +26,7 @@ import { soundSystem } from './systems/soundSystem.js';
 import { battleManager } from './managers/battleManager.js';
 import { resourceManager } from './managers/resourceManager.js';
 import { loadingScreen } from './ui/loadingScreen.js';
+import { commandHistory } from './managers/commandHistory.js';
 
 // Control 모듈
 import { cameraControls } from './controls/cameraControls.js';
@@ -36,6 +37,8 @@ import { combatLog } from './ui/combatLog.js';
 import { fpsCounter } from './ui/fpsCounter.js';
 import { healthBarUI } from './ui/healthBarUI.js';
 import { animationControl } from './ui/animationControl.js';
+import { replayControl } from './ui/replayControl.js';
+import { replayIndicator } from './ui/replayIndicator.js';
 
 /**
  * 게임 메인 클래스
@@ -92,6 +95,8 @@ class Game {
             fpsCounter.init();
             healthBarUI.init();
             animationControl.init();
+            replayControl.init();
+            replayIndicator.init();
 
             // 배틀 매니저 초기화
             battleManager.init();
@@ -404,6 +409,11 @@ class Game {
         fpsCounter.destroy();
         healthBarUI.destroy();
         animationControl.destroy();
+        replayControl.destroy();
+        replayIndicator.destroy();
+        
+        // 커맨드 히스토리 초기화
+        commandHistory.clear();
 
     }
 }
