@@ -22,6 +22,7 @@ import { gridSystem } from './systems/gridSystem.js';
 import { combatSystem } from './systems/combatSystem.js';
 import { movementSystem } from './systems/movementSystem.js';
 import { aiSystem } from './systems/aiSystem.js';
+import { soundSystem } from './systems/soundSystem.js';
 
 // Control 모듈
 import { cameraControls } from './controls/cameraControls.js';
@@ -63,6 +64,9 @@ class Game {
             const { scene, camera, renderer } = sceneSetup.init(gameCanvas);
 
 
+            // 사운드 시스템 초기화
+            await soundSystem.init();
+            
             // UI 초기화 (캐릭터 생성 전에 해야 함)
             combatLog.init();
             fpsCounter.init();

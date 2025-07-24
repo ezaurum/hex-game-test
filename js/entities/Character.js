@@ -21,6 +21,7 @@ import {
     ANIMATION
 } from '../core/constants.js';
 import { healthBarUI } from '../ui/healthBarUI.js';
+import { soundSystem } from '../systems/soundSystem.js';
 
 /**
  * 캐릭터 클래스
@@ -330,6 +331,9 @@ export class Character {
 
         // Play walk animation
         this.playAnimation('Walk', true);
+        
+        // Play movement sound
+        soundSystem.playMove();
 
         const animate = () => {
             const elapsed = Date.now() - startTime;

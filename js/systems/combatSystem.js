@@ -8,6 +8,7 @@
 
 import { gameState } from '../core/gameState.js';
 import { gridSystem } from './gridSystem.js';
+import { soundSystem } from './soundSystem.js';
 
 /**
  * 전투 시스템 클래스
@@ -49,8 +50,14 @@ export class CombatSystem {
             return false;
         }
         
+        // 공격 효과음 재생
+        soundSystem.playAttack();
+        
         // 공격 애니메이션과 데미지 적용
         const damage = attacker.attack(target, () => {
+            // 피격 효과음 재생
+            soundSystem.playHit();
+            
             // 전투 로그 추가
             this.addCombatLog(
                 `${attacker.name}이(가) ${target.name}에게 ${damage}의 데미지를 입혔습니다!`
