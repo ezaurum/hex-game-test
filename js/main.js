@@ -24,6 +24,8 @@ import { movementSystem } from './systems/movementSystem.js';
 import { aiSystem } from './systems/aiSystem.js';
 import { soundSystem } from './systems/soundSystem.js';
 import { battleManager } from './managers/battleManager.js';
+import { resourceManager } from './managers/resourceManager.js';
+import { loadingScreen } from './ui/loadingScreen.js';
 
 // Control 모듈
 import { cameraControls } from './controls/cameraControls.js';
@@ -61,6 +63,23 @@ class Game {
     async init() {
 
         try {
+            // 로딩 스크린 생성
+            loadingScreen.create();
+            
+            // 리소스 로드
+            await resourceManager.loadAll(
+                (progress) => {
+                    loadingScreen.updateProgress(progress);
+                },
+                () => {
+                    console.log('All resources loaded successfully');
+                    loadingScreen.complete();
+                },
+                (error) => {
+                    console.error('Resource loading error:', error);
+                }
+            );
+            
             // Three.js 씬 설정
             const gameCanvas = document.getElementById('gameCanvas');
             const { scene, camera, renderer } = sceneSetup.init(gameCanvas);

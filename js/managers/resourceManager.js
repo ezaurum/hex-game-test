@@ -6,7 +6,7 @@
  */
 
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 /**
  * 리소스 타입 열거형
@@ -25,33 +25,16 @@ const RESOURCES = {
     models: {
         robot: {
             name: 'robot',
-            path: '/assets/models/RobotExpressive.glb',
+            path: 'RobotExpressive/RobotExpressive.glb',
             type: ResourceType.MODEL
         }
     },
     textures: {
-        tile: {
-            name: 'tile',
-            path: '/assets/textures/tile.png',
-            type: ResourceType.TEXTURE
-        }
+        // 텍스처 파일이 준비되면 여기에 추가
     },
     sounds: {
-        footstep: {
-            name: 'footstep',
-            path: '/assets/sounds/footstep.mp3',
-            type: ResourceType.SOUND
-        },
-        hit: {
-            name: 'hit',
-            path: '/assets/sounds/hit.mp3',
-            type: ResourceType.SOUND
-        },
-        attack: {
-            name: 'attack',
-            path: '/assets/sounds/attack.mp3',
-            type: ResourceType.SOUND
-        }
+        // 현재는 프로시저럴 사운드를 사용하므로 비워둠
+        // 나중에 실제 사운드 파일 추가 시 여기에 정의
     }
 };
 

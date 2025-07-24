@@ -8,7 +8,6 @@
  */
 
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {
     COLORS,
     CHARACTER_TYPE,
@@ -21,6 +20,7 @@ import {
     ANIMATION
 } from '../core/constants.js';
 import { healthBarUI } from '../ui/healthBarUI.js';
+import { resourceManager } from '../managers/resourceManager.js';
 
 /**
  * 캐릭터 클래스
@@ -181,22 +181,21 @@ export class Character {
         this.mesh = new THREE.Group();
         this.mesh.add(placeholderMesh);
 
-        // GLTF 모델 로드
-        const loader = new GLTFLoader();
-        loader.load('RobotExpressive/RobotExpressive.glb',
-            (gltf) => {
-                // 기존 placeholder 제거
-                this.mesh.clear();
+        // 리소스 매니저에서 모델 가져오기
+        const robotGltf = resourceManager.getModel('robot');
+        if (robotGltf) {
+            // 기존 placeholder 제거
+            this.mesh.clear();
 
-                // 모델 설정
-                this.model = gltf.scene;
-                this.model.scale.set(0.25, 0.25, 0.25); // 크기 조정
-                this.model.position.y = 0.05; // 타일 위에 위치
-                this.model.rotation.y = this.facingDirection; // 저장된 방향 적용
+            // 모델 복제 (여러 캐릭터가 같은 모델 사용)
+            this.model = robotGltf.scene.clone();
+            this.model.scale.set(0.25, 0.25, 0.25); // 크기 조정
+            this.model.position.y = 0.05; // 타일 위에 위치
+            this.model.rotation.y = this.facingDirection; // 저장된 방향 적용
 
-                // 모델의 모든 메시에 색상 적용
-                this.model.traverse((child) => {
-                    if (child.isMesh) {
+            // 모델의 모든 메시에 색상 적용
+            this.model.traverse((child) => {
+                if (child.isMesh) {
                         child.castShadow = true;
                         child.receiveShadow = true;
 
@@ -213,43 +212,33 @@ export class Character {
                     }
                 });
 
-                // 애니메이션 설정
-                if (gltf.animations && gltf.animations.length > 0) {
-                    this.mixer = new THREE.AnimationMixer(this.model);
-                    this.animations = {};
+            // 애니메이션 설정
+            if (robotGltf.animations && robotGltf.animations.length > 0) {
+                this.mixer = new THREE.AnimationMixer(this.model);
+                this.animations = {};
 
-                    // 모든 애니메이션 저장
-                    gltf.animations.forEach((clip) => {
-                        this.animations[clip.name] = clip;
-                    });
+                // 모든 애니메이션 저장
+                robotGltf.animations.forEach((clip) => {
+                    this.animations[clip.name] = clip;
+                });
 
-                    // 기본 애니메이션 재생 (Idle)
-                    const idleClip = this.animations['Idle'] || gltf.animations[0];
-                    if (idleClip) {
-                        const action = this.mixer.clipAction(idleClip);
-                        action.play();
-                        this.currentAction = action;
-                    }
+                // 기본 애니메이션 재생 (Idle)
+                const idleClip = this.animations['Idle'] || robotGltf.animations[0];
+                if (idleClip) {
+                    const action = this.mixer.clipAction(idleClip);
+                    action.play();
+                    this.currentAction = action;
                 }
-
-                this.mesh.add(this.model);
-
-                // 데이터 저장
-                this.mesh.userData.character = this;
-                this.model.userData.character = this;
-
-            },
-            (progress) => {
-                // 로딩 진행 상황
-                if (progress.total > 0) {
-                    const percent = (progress.loaded / progress.total * 100).toFixed(0);
-                }
-            },
-            (error) => {
-                console.error('모델 로드 실패:', error);
-                // 실패 시 기본 모델 유지
             }
-        );
+
+            this.mesh.add(this.model);
+
+            // 데이터 저장
+            this.mesh.userData.character = this;
+            this.model.userData.character = this;
+        } else {
+            console.warn('Robot model not loaded yet, using placeholder');
+        }
 
         // 캐릭터 데이터 저장 (레이캐스팅용)
         this.mesh.userData.character = this;
