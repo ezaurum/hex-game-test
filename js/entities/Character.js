@@ -21,7 +21,6 @@ import {
     ANIMATION
 } from '../core/constants.js';
 import { healthBarUI } from '../ui/healthBarUI.js';
-import { soundSystem } from '../systems/soundSystem.js';
 
 /**
  * 캐릭터 클래스
@@ -274,254 +273,51 @@ export class Character {
     }
 
     /**
-     * 다른 타일로 이동
+     * 다른 타일로 이동 (로직만 처리)
      *
      * @param {HexTile} targetTile - 목표 타일
      * @param {Function} [onComplete] - 이동 완료 콜백
      * @param {number} [distance=1] - 이동 거리
      */
     moveTo(targetTile, onComplete, distance = 1) {
-        if (targetTile.isOccupied()) {
-            return;
-        }
-        
-        if (this.movedDistance + distance > this.movementRange) {
-            return;
-        }
-
-        // 이전 타일에서 제거
-        if (this.currentTile) {
-            this.currentTile.removeOccupant();
-        }
-
-        // 애니메이션을 위한 현재 위치 저장
-        const startPos = {
-            x: this.group.position.x,
-            z: this.group.position.z
-        };
-        
-        // 새 타일로 이동 (논리적 위치 업데이트, 위치는 애니메이션 후 업데이트)
-        this.currentTile = targetTile;
-        targetTile.setOccupant(this, false); // 위치 업데이트 안 함
-
-        // 목표 위치 계산
-        const targetPos = targetTile.getPixelPosition();
-
-        const startTime = Date.now();
-        const duration = ANIMATION.MOVEMENT_DURATION;
-
-        // 이동 방향 계산 및 회전 설정
-        const direction = new THREE.Vector3(
-            targetPos.x - startPos.x,
-            0,
-            targetPos.z - startPos.z
-        );
-        
-        if (direction.length() > 0.01) { // 작은 차이는 무시
-            const angle = Math.atan2(direction.x, direction.z);
-            this.facingDirection = angle;
-            
-            // 모델이 있으면 모델을 회전, 없으면 메시 그룹을 회전
-            if (this.model) {
-                this.model.rotation.y = angle;
-            } else if (this.mesh) {
-                this.mesh.rotation.y = angle;
-            }
-        }
-
-        // Play walk animation
-        this.playAnimation('Walk', true);
-        
-        // Play movement sound
-        soundSystem.playMove();
-
-        const animate = () => {
-            const elapsed = Date.now() - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-
-            // 이징 함수 (ease-in-out)
-            const eased = progress < 0.5
-                ? 2 * progress * progress
-                : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-
-            // 위치 보간
-            this.group.position.x = startPos.x + (targetPos.x - startPos.x) * eased;
-            this.group.position.z = startPos.z + (targetPos.z - startPos.z) * eased;
-
-            // 점프 효과
-            this.group.position.y = Math.sin(progress * Math.PI) * 0.5;
-
-            if (progress < 1) {
-                requestAnimationFrame(animate);
-            } else {
-                this.group.position.y = 0;
-                this.hasMoved = true;
-                this.movedDistance += distance;
-                // Return to idle animation
-                this.playAnimation('Idle', true);
-                if (onComplete) onComplete();
-            }
-        };
-
-        animate();
+        // 이 메서드는 더 이상 사용되지 않음
+        // battleManager.moveCharacter를 사용하세요
+        console.warn('Character.moveTo is deprecated. Use battleManager.moveCharacter instead.');
+        if (onComplete) onComplete();
     }
 
     /**
-     * 다른 캐릭터 공격
+     * 다른 캐릭터 공격 (로직만 처리)
      *
      * @param {Character} target - 공격 대상
      * @param {Function} [onComplete] - 공격 완료 콜백
      * @returns {number} 실제 데미지
      */
     attack(target, onComplete) {
-        if (this.hasAttacked) {
-            return 0;
-        }
-
-        // 데미지 계산 (랜덤 변동 포함)
-        const variance = Math.floor(Math.random() * (DAMAGE_VARIANCE * 2 + 1)) - DAMAGE_VARIANCE;
-        const damage = Math.max(1, this.attackPower + variance);
-
-        // 공격 애니메이션
-        const originalPos = { ...this.group.position };
-        const direction = new THREE.Vector3(
-            target.group.position.x - this.group.position.x,
-            0,
-            target.group.position.z - this.group.position.z
-        ).normalize();
-
-        // 공격자가 타겟을 바라보기
-        const attackerAngle = Math.atan2(direction.x, direction.z);
-        this.facingDirection = attackerAngle;
-        if (this.model) {
-            this.model.rotation.y = attackerAngle;
-        } else if (this.mesh) {
-            this.mesh.rotation.y = attackerAngle;
-        }
-
-        // 타겟이 공격자를 바라보기 (공격 시작 전에)
-        const targetDirection = new THREE.Vector3(
-            this.group.position.x - target.group.position.x,
-            0,
-            this.group.position.z - target.group.position.z
-        ).normalize();
-        
-        const targetAngle = Math.atan2(targetDirection.x, targetDirection.z);
-        target.facingDirection = targetAngle;
-        if (target.model) {
-            target.model.rotation.y = targetAngle;
-        } else if (target.mesh) {
-            target.mesh.rotation.y = targetAngle;
-        }
-
-        // Play attack animation
-        this.playAnimation('Punch', false);
-
-        const startTime = Date.now();
-        const duration = ANIMATION.ATTACK_DURATION;
-
-        const animate = () => {
-            const elapsed = Date.now() - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-
-            if (progress < 0.5) {
-                // 전진
-                const forward = progress * 2;
-                this.group.position.x = originalPos.x + direction.x * forward * 0.3;
-                this.group.position.z = originalPos.z + direction.z * forward * 0.3;
-            } else {
-                // 후퇴
-                const backward = (1 - progress) * 2;
-                this.group.position.x = originalPos.x + direction.x * backward * 0.3;
-                this.group.position.z = originalPos.z + direction.z * backward * 0.3;
-            }
-
-            // 공격이 적중하는 타이밍 (전진이 최대일 때)
-            if (elapsed >= duration * 0.4 && elapsed < duration * 0.5 && !this.hasDealtDamage) {
-                this.hasDealtDamage = true;
-                // 데미지 적용 및 피격 애니메이션 시작
-                target.takeDamage(damage, this);
-            }
-
-            if (progress < 1) {
-                requestAnimationFrame(animate);
-            } else {
-                this.hasAttacked = true;
-                this.hasDealtDamage = false; // 리셋
-                // Return to idle animation
-                setTimeout(() => {
-                    this.playAnimation('Idle', true);
-                }, 100);
-                if (onComplete) onComplete();
-            }
-        };
-
-        animate();
-
-        return damage;
+        // 이 메서드는 더 이상 사용되지 않음
+        // battleManager.performAttack을 사용하세요
+        console.warn('Character.attack is deprecated. Use battleManager.performAttack instead.');
+        if (onComplete) onComplete();
+        return 0;
     }
 
     /**
-     * 데미지 받기
+     * 데미지 받기 (전투 매니저에서 호출됨)
      *
      * @param {number} damage - 받을 데미지
      * @param {Character} [attacker] - 공격자 (선택적)
      */
     takeDamage(damage, attacker) {
+        // 전투 매니저가 처리하므로 여기서는 기본적인 처리만
         this.health = Math.max(0, this.health - damage);
+        this.updateHealthBar();
+    }
+    
+    /**
+     * 체력바 업데이트
+     */
+    updateHealthBar() {
         healthBarUI.updateHealthBar(this);
-
-        // 피격 애니메이션 재생
-        this.playAnimation('Hit', false);
-        
-        // 피격 애니메이션이 없으면 몸을 뒤로 젖히는 효과
-        if (!this.animations || !this.animations['Hit']) {
-            const originalRotation = this.model ? this.model.rotation.x : (this.mesh ? this.mesh.rotation.x : 0);
-            const hitTarget = this.model || this.mesh;
-            
-            if (hitTarget) {
-                // 뒤로 젖히기
-                hitTarget.rotation.x = -0.2;
-                
-                // 원래 자세로 복구
-                setTimeout(() => {
-                    hitTarget.rotation.x = originalRotation;
-                    this.playAnimation('Idle', true);
-                }, 300);
-            }
-        } else {
-            // Hit 애니메이션이 끝나면 Idle로 복귀
-            setTimeout(() => {
-                this.playAnimation('Idle', true);
-            }, 500);
-        }
-
-        // 피격 효과 (빨간색 플래시)
-        const originalColors = new Map();
-        
-        // mesh 전체를 순회하며 material이 있는 객체만 처리
-        this.mesh.traverse(child => {
-            if (child.isMesh && child.material && child.material.color) {
-                // 원래 색상 저장
-                originalColors.set(child, child.material.color.getHex());
-                // 빨간색으로 변경
-                child.material.color.setHex(0xff0000);
-            }
-        });
-
-        // 200ms 후 원래 색상으로 복원
-        setTimeout(() => {
-            originalColors.forEach((color, child) => {
-                if (child.material && child.material.color) {
-                    child.material.color.setHex(color);
-                }
-            });
-        }, 200);
-
-        // 사망 처리
-        if (this.health <= 0) {
-            this.die();
-        }
     }
 
     /**

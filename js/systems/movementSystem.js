@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { gameState } from '../core/gameState.js';
 import { gridSystem } from './gridSystem.js';
 import { COLORS } from '../core/constants.js';
+import { battleManager } from '../managers/battleManager.js';
 
 /**
  * 이동 시스템 클래스
@@ -38,7 +39,7 @@ export class MovementSystem {
     }
     
     /**
-     * 캐릭터 이동 실행
+     * 캐릭터 이동 실행 (새로운 배틀 매니저 사용)
      * 
      * @param {Character} character - 이동할 캐릭터
      * @param {HexTile} targetTile - 목표 타일
@@ -46,13 +47,17 @@ export class MovementSystem {
      * @returns {boolean} 이동 시작 성공 여부
      */
     moveCharacter(character, targetTile, callback) {
+        console.log('movementSystem.moveCharacter called', { character: character.name, targetTile });
+        
         // 이동 가능 여부 확인
         if (!this.canMoveTo(character, targetTile)) {
+            console.log('Cannot move to target tile');
             return false;
         }
         
         // 경로 찾기
         const path = gridSystem.findPath(character.currentTile, targetTile);
+        console.log('Path found:', path.length, 'tiles');
         if (path.length === 0) {
             return false;
         }
@@ -60,50 +65,47 @@ export class MovementSystem {
         // 남은 이동 범위 확인
         const remainingMovement = character.movementRange - character.movedDistance;
         if (path.length > remainingMovement) {
+            console.log('Path too long:', path.length, '>', remainingMovement);
             return false;
         }
         
         // 하이라이트 초기화
         this.clearMovementHighlights();
         
-        // 경로 따라 이동
-        this.moveAlongPath(character, path, () => {
-            
-            if (this.onMoveComplete) {
-                this.onMoveComplete(character);
-            }
-            
-            if (callback) {
-                callback();
-            }
-        });
+        // 배틀 매니저를 통한 이동
+        console.log('Calling battleManager.moveCharacter');
+        const success = battleManager.moveCharacter(character, path);
+        console.log('battleManager.moveCharacter result:', success);
         
-        return true;
+        if (success) {
+            // 콜백 설정
+            const originalCallback = battleManager.callbacks.onMoveComplete;
+            battleManager.callbacks.onMoveComplete = (char) => {
+                if (this.onMoveComplete) {
+                    this.onMoveComplete(char);
+                }
+                if (callback) {
+                    callback();
+                }
+                // 원래 콜백 복원
+                battleManager.callbacks.onMoveComplete = originalCallback;
+            };
+        }
+        
+        return success;
     }
     
     /**
-     * 경로를 따라 순차적으로 이동
+     * 경로를 따라 순차적으로 이동 (더 이상 사용하지 않음)
      * 
      * @param {Character} character - 캐릭터
      * @param {HexTile[]} path - 이동 경로
      * @param {Function} [callback] - 완료 콜백
+     * @deprecated 배틀 매니저를 사용하세요
      */
     moveAlongPath(character, path, callback) {
-        let currentIndex = 0;
-        
-        const moveNext = () => {
-            if (currentIndex >= path.length) {
-                if (callback) callback();
-                return;
-            }
-            
-            const nextTile = path[currentIndex];
-            currentIndex++;
-            
-            character.moveTo(nextTile, moveNext, 1);
-        };
-        
-        moveNext();
+        console.warn('moveAlongPath is deprecated. Use battleManager.moveCharacter instead.');
+        if (callback) callback();
     }
     
     /**

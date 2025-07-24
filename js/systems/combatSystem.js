@@ -8,7 +8,7 @@
 
 import { gameState } from '../core/gameState.js';
 import { gridSystem } from './gridSystem.js';
-import { soundSystem } from './soundSystem.js';
+import { battleManager } from '../managers/battleManager.js';
 
 /**
  * 전투 시스템 클래스
@@ -37,7 +37,7 @@ export class CombatSystem {
     }
     
     /**
-     * 공격 실행
+     * 공격 실행 (새로운 배틀 매니저 사용)
      * 
      * @param {Character} attacker - 공격자
      * @param {Character} target - 대상
@@ -50,29 +50,35 @@ export class CombatSystem {
             return false;
         }
         
-        // 공격 효과음 재생
-        soundSystem.playAttack();
+        // 콜백 설정
+        const originalCallbacks = { ...battleManager.callbacks };
         
-        // 공격 애니메이션과 데미지 적용
-        const damage = attacker.attack(target, () => {
-            // 피격 효과음 재생
-            soundSystem.playHit();
-            
+        battleManager.callbacks.onDamageDealt = (attacker, target, damage) => {
             // 전투 로그 추가
             this.addCombatLog(
                 `${attacker.name}이(가) ${target.name}에게 ${damage}의 데미지를 입혔습니다!`
             );
-            
-            // 사망 체크
-            if (!target.isAlive()) {
-                this.handleCharacterDeath(target);
-            }
-            
-            // 콜백 실행
-            if (callback) callback();
-        });
+        };
         
-        return true;
+        battleManager.callbacks.onCharacterDeath = (character) => {
+            this.handleCharacterDeath(character);
+        };
+        
+        // 배틀 매니저를 통한 공격 실행
+        const damage = battleManager.performAttack(attacker, target);
+        
+        // 콜백 실행
+        if (callback) {
+            // 애니메이션 완료 후 콜백 실행
+            setTimeout(callback, 100);
+        }
+        
+        // 원래 콜백 복원
+        setTimeout(() => {
+            battleManager.callbacks = originalCallbacks;
+        }, 2000);
+        
+        return damage > 0;
     }
     
     /**

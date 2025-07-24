@@ -23,6 +23,7 @@ import { combatSystem } from './systems/combatSystem.js';
 import { movementSystem } from './systems/movementSystem.js';
 import { aiSystem } from './systems/aiSystem.js';
 import { soundSystem } from './systems/soundSystem.js';
+import { battleManager } from './managers/battleManager.js';
 
 // Control 모듈
 import { cameraControls } from './controls/cameraControls.js';
@@ -32,6 +33,7 @@ import { inputHandler } from './controls/inputHandler.js';
 import { combatLog } from './ui/combatLog.js';
 import { fpsCounter } from './ui/fpsCounter.js';
 import { healthBarUI } from './ui/healthBarUI.js';
+import { animationControl } from './ui/animationControl.js';
 
 /**
  * 게임 메인 클래스
@@ -66,11 +68,14 @@ class Game {
 
             // 사운드 시스템 초기화
             await soundSystem.init();
-            
             // UI 초기화 (캐릭터 생성 전에 해야 함)
             combatLog.init();
             fpsCounter.init();
             healthBarUI.init();
+            animationControl.init();
+
+            // 배틀 매니저 초기화
+            battleManager.init();
 
             // 그리드 생성
             gridSystem.createGrid();
@@ -184,33 +189,46 @@ class Game {
      * 시스템 콜백 설정
      */
     setupSystemCallbacks() {
-        // 전투 시스템 콜백
-        combatSystem.onCombatLog = (message) => {
-            combatLog.addLog(message, 'damage');
+        // 배틀 매니저 콜백
+        battleManager.callbacks.onDamageDealt = (attacker, target, damage) => {
+            combatLog.addLog(
+                `${attacker.name}이(가) ${target.name}에게 ${damage}의 데미지를 입혔습니다!`,
+                'damage'
+            );
         };
-
-        combatSystem.onCharacterDeath = (character) => {
+        
+        battleManager.callbacks.onCharacterDeath = (character) => {
             combatLog.addLog(`${character.name}이(가) 쓰러졌습니다!`, 'system');
-
+            
             // 캐릭터 제거 (약간의 딜레이 후)
             setTimeout(() => {
                 sceneSetup.scene.remove(character.group);
                 character.dispose();
             }, 2000);
         };
-
-        combatSystem.onCombatEnd = (result) => {
+        
+        battleManager.callbacks.onBattleEnd = (result) => {
             const isVictory = result === 'player_won';
             combatLog.addGameEndLog(isVictory);
-
+            
             // 게임 종료 처리
             this.handleGameEnd(isVictory);
         };
+        
+        // 기존 시스템 콜백도 유지 (호환성)
+        combatSystem.onCombatLog = (message) => {
+            combatLog.addLog(message, 'damage');
+        };
+        
+        combatSystem.onCharacterDeath = battleManager.callbacks.onCharacterDeath;
+        combatSystem.onCombatEnd = battleManager.callbacks.onBattleEnd;
 
         // 이동 시스템 콜백
-        movementSystem.onMoveComplete = (character) => {
+        battleManager.callbacks.onMoveComplete = (character) => {
             combatLog.addMoveLog(character.name);
         };
+        
+        movementSystem.onMoveComplete = battleManager.callbacks.onMoveComplete;
 
         // 입력 핸들러에 턴 종료 함수 연결
         inputHandler.endPlayerTurn = () => {
@@ -366,6 +384,7 @@ class Game {
         combatLog.destroy();
         fpsCounter.destroy();
         healthBarUI.destroy();
+        animationControl.destroy();
 
     }
 }
