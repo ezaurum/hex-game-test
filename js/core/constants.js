@@ -111,8 +111,8 @@ export const CAMERA = {
     MIN_ZOOM: 5,                                 // 최소 줌 거리
     MAX_ZOOM: 50,                                // 최대 줌 거리
     ROTATION_SPEED: 0.01,                        // 카메라 회전 속도
-    PAN_SPEED: 0.2,                              // 카메라 이동 속도
-    ZOOM_SPEED: 0.5,                             // 줌 속도
+    PAN_SPEED: 0.16,                             // 카메라 이동 속도 (0.2 * 0.8)
+    ZOOM_SPEED: 4,                               // 줌 속도
 };
 
 /**

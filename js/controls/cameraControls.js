@@ -114,6 +114,13 @@ export class CameraControls {
 
         // Copy to smooth target
         this.smoothTarget.spherical = { ...this.spherical };
+        
+        // Validate spherical values
+        if (isNaN(this.spherical.radius) || isNaN(this.smoothTarget.spherical.radius)) {
+            console.error('Initial spherical radius is NaN, setting default');
+            this.spherical.radius = 20;
+            this.smoothTarget.spherical.radius = 20;
+        }
 
     }
 
@@ -222,9 +229,22 @@ export class CameraControls {
     onMouseWheel(event) {
         event.preventDefault();
 
-        // 휠 방향에 따라 줌 인/아웃
-        const zoomDelta = event.deltaY > 0 ? 1 : -1;
-        this.zoom(zoomDelta);
+        // deltaY가 0이거나 NaN인 경우 처리
+        if (!event.deltaY || isNaN(event.deltaY)) {
+            return;
+        }
+
+        // deltaY를 정규화하여 줌 속도 계산
+        // 브라우저마다 deltaY 값이 다를 수 있으므로 정규화
+        const normalizedDelta = Math.sign(event.deltaY) * Math.min(Math.abs(event.deltaY) / 100, 1);
+        
+        // NaN 체크
+        if (isNaN(normalizedDelta)) {
+            console.error('Normalized delta is NaN', { deltaY: event.deltaY, normalizedDelta });
+            return;
+        }
+        
+        this.zoom(normalizedDelta);
     }
 
     /**
@@ -299,9 +319,24 @@ export class CameraControls {
      * @param {number} delta - 줌 방향 (-1 또는 1)
      */
     zoom(delta) {
+        // NaN 체크
+        if (isNaN(this.smoothTarget.spherical.radius)) {
+            console.warn('smoothTarget.spherical.radius is NaN, resetting to current radius');
+            this.smoothTarget.spherical.radius = this.spherical.radius;
+        }
+        
         // 줌 거리 계산
         const zoomSpeed = this.speed.zoom;
-        this.smoothTarget.spherical.radius += delta * zoomSpeed * this.spherical.radius * 0.1;
+        const currentRadius = this.smoothTarget.spherical.radius;
+        const zoomAmount = delta * zoomSpeed * currentRadius * 0.1;
+        
+        // NaN 체크
+        if (isNaN(zoomAmount)) {
+            console.error('Zoom amount is NaN', { delta, zoomSpeed, currentRadius });
+            return;
+        }
+        
+        this.smoothTarget.spherical.radius += zoomAmount;
 
         // 줌 제한 적용
         this.smoothTarget.spherical.radius = Math.max(
