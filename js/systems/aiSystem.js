@@ -11,6 +11,7 @@ import { gameState } from '../core/gameState.js';
 import { gridSystem } from './gridSystem.js';
 import { movementSystem } from './movementSystem.js';
 import { combatSystem } from './combatSystem.js';
+import { battleManager } from '../managers/battleManager.js';
 import { CHARACTER_TYPE } from '../core/constants.js';
 
 /**
@@ -336,7 +337,14 @@ export class AISystem {
      * @param {Function} callback - 완료 콜백
      */
     performAttack(enemy, target, callback) {
-        combatSystem.performAttack(enemy, target, callback);
+        // battleManager를 통해 공격 수행
+        const damage = battleManager.performAttack(enemy, target);
+        if (damage > 0) {
+            // 공격 성공, 애니메이션이 완료될 때까지 기다림
+            setTimeout(callback, 1000);
+        } else {
+            callback();
+        }
     }
     
     /**
