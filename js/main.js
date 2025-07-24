@@ -36,6 +36,7 @@ import { inputHandler } from './controls/inputHandler.js';
 import { fpsCounter } from './ui/fpsCounter.js';
 import { healthBarUI } from './ui/healthBarUI.js';
 import { replayIndicator } from './ui/replayIndicator.js';
+import { gameManager } from './managers/gameManager.js';
 import { unifiedControlPanel } from './ui/unifiedControlPanel.js';
 import { victoryMessage } from './ui/victoryMessage.js';
 
@@ -139,8 +140,8 @@ class Game {
 
             // NOW initialize controls
             cameraControls.init();
-
             inputHandler.init();
+            gameManager.init();
 
             // 전투 시스템 콜백 설정
             this.setupSystemCallbacks();

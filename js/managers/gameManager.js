@@ -33,6 +33,12 @@ class GameManager {
     onTileClicked(tile) {
         if (!gameState.isPlayerTurn()) return;
 
+        // 타일에 플레이어 캐릭터가 있으면 선택
+        if (tile.isOccupied() && tile.occupant.type === CHARACTER_TYPE.PLAYER) {
+            this.selectPlayerCharacter(tile.occupant);
+            return;
+        }
+
         const selectedCharacter = gameState.selectedCharacter;
 
         if (selectedCharacter) {
