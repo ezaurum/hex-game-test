@@ -234,11 +234,12 @@ export class HexTile {
      * 캐릭터 배치
      * 
      * @param {Character} character - 배치할 캐릭터
+     * @param {boolean} [updatePosition=true] - 캐릭터 위치를 즉시 업데이트할지 여부
      */
-    setOccupant(character) {
+    setOccupant(character, updatePosition = true) {
         this.occupant = character;
         
-        if (character) {
+        if (character && updatePosition) {
             // 캐릭터 위치를 타일 위로 설정
             const pos = this.getPixelPosition();
             character.setPosition(pos.x, pos.z);

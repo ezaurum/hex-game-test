@@ -118,6 +118,12 @@ export class Character {
          * @type {boolean}
          */
         this.isSelected = false;
+        
+        /**
+         * 현재 바라보는 방향 (라디안)
+         * @type {number}
+         */
+        this.facingDirection = 0;
 
         /**
          * Three.js 그룹 (캐릭터 + UI)
@@ -180,6 +186,7 @@ export class Character {
                 this.model = gltf.scene;
                 this.model.scale.set(0.25, 0.25, 0.25); // 크기 조정
                 this.model.position.y = 0.05; // 타일 위에 위치
+                this.model.rotation.y = this.facingDirection; // 저장된 방향 적용
 
                 // 모델의 모든 메시에 색상 적용
                 this.model.traverse((child) => {
@@ -285,19 +292,40 @@ export class Character {
             this.currentTile.removeOccupant();
         }
 
-        // 새 타일로 이동
-        this.currentTile = targetTile;
-        targetTile.setOccupant(this);
-
-        // 애니메이션
-        const targetPos = targetTile.getPixelPosition();
+        // 애니메이션을 위한 현재 위치 저장
         const startPos = {
             x: this.group.position.x,
             z: this.group.position.z
         };
+        
+        // 새 타일로 이동 (논리적 위치 업데이트, 위치는 애니메이션 후 업데이트)
+        this.currentTile = targetTile;
+        targetTile.setOccupant(this, false); // 위치 업데이트 안 함
+
+        // 목표 위치 계산
+        const targetPos = targetTile.getPixelPosition();
 
         const startTime = Date.now();
         const duration = ANIMATION.MOVEMENT_DURATION;
+
+        // 이동 방향 계산 및 회전 설정
+        const direction = new THREE.Vector3(
+            targetPos.x - startPos.x,
+            0,
+            targetPos.z - startPos.z
+        );
+        
+        if (direction.length() > 0.01) { // 작은 차이는 무시
+            const angle = Math.atan2(direction.x, direction.z);
+            this.facingDirection = angle;
+            
+            // 모델이 있으면 모델을 회전, 없으면 메시 그룹을 회전
+            if (this.model) {
+                this.model.rotation.y = angle;
+            } else if (this.mesh) {
+                this.mesh.rotation.y = angle;
+            }
+        }
 
         // Play walk animation
         this.playAnimation('Walk', true);
@@ -317,12 +345,6 @@ export class Character {
 
             // 점프 효과
             this.group.position.y = Math.sin(progress * Math.PI) * 0.5;
-
-            // Face the direction of movement
-            if (this.model) {
-                const angle = Math.atan2(targetPos.x - startPos.x, targetPos.z - startPos.z);
-                this.model.rotation.y = angle;
-            }
 
             if (progress < 1) {
                 requestAnimationFrame(animate);
@@ -365,9 +387,12 @@ export class Character {
         ).normalize();
 
         // Face the target
+        const angle = Math.atan2(direction.x, direction.z);
+        this.facingDirection = angle;
         if (this.model) {
-            const angle = Math.atan2(direction.x, direction.z);
             this.model.rotation.y = angle;
+        } else if (this.mesh) {
+            this.mesh.rotation.y = angle;
         }
 
         // Play attack animation
