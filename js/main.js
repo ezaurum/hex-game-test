@@ -37,6 +37,7 @@ import { fpsCounter } from './ui/fpsCounter.js';
 import { healthBarUI } from './ui/healthBarUI.js';
 import { replayIndicator } from './ui/replayIndicator.js';
 import { unifiedControlPanel } from './ui/unifiedControlPanel.js';
+import { victoryMessage } from './ui/victoryMessage.js';
 
 /**
  * 게임 메인 클래스
@@ -93,6 +94,7 @@ class Game {
             healthBarUI.init();
             replayIndicator.init();
             unifiedControlPanel.init();
+            victoryMessage.init();
 
             // 배틀 매니저 초기화
             battleManager.init();
@@ -234,6 +236,15 @@ class Game {
             const message = isVictory ? '플레이어 승리!' : '플레이어 패배!';
             unifiedControlPanel.addLog(message, 'system');
             
+            // 승리/패배 메시지 표시
+            setTimeout(() => {
+                if (isVictory) {
+                    victoryMessage.showVictory();
+                } else {
+                    victoryMessage.showDefeat();
+                }
+            }, 1000); // 1초 후 표시
+            
             // 게임 종료 처리
             this.handleGameEnd(isVictory);
         };
@@ -334,17 +345,7 @@ class Game {
     handleGameEnd(isVictory) {
         // 입력 비활성화
         inputHandler.setEnabled(false);
-
-        // 결과 표시
-        setTimeout(() => {
-            const message = isVictory
-                ? '축하합니다! 모든 적을 물리쳤습니다!'
-                : '패배했습니다. 다시 도전해보세요!';
-
-            if (confirm(message + '\n\n새 게임을 시작하시겠습니까?')) {
-                this.restart();
-            }
-        }, 1000);
+        // VictoryMessage 컴포넌트가 처리하므로 여기서는 별도 처리 없음
     }
 
     /**
@@ -409,6 +410,7 @@ class Game {
         healthBarUI.destroy();
         replayIndicator.destroy();
         unifiedControlPanel.destroy();
+        victoryMessage.destroy();
         
         // 커맨드 히스토리 초기화
         commandHistory.clear();
