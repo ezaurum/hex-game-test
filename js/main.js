@@ -33,13 +33,10 @@ import { cameraControls } from './controls/cameraControls.js';
 import { inputHandler } from './controls/inputHandler.js';
 
 // UI 모듈
-import { combatLog } from './ui/combatLog.js';
 import { fpsCounter } from './ui/fpsCounter.js';
 import { healthBarUI } from './ui/healthBarUI.js';
-import { animationControl } from './ui/animationControl.js';
-import { replayControl } from './ui/replayControl.js';
 import { replayIndicator } from './ui/replayIndicator.js';
-import { turnControl } from './ui/turnControl.js';
+import { unifiedControlPanel } from './ui/unifiedControlPanel.js';
 
 /**
  * 게임 메인 클래스
@@ -92,13 +89,10 @@ class Game {
             // 사운드 시스템 초기화
             await soundSystem.init();
             // UI 초기화 (캐릭터 생성 전에 해야 함)
-            combatLog.init();
             fpsCounter.init();
             healthBarUI.init();
-            animationControl.init();
-            replayControl.init();
             replayIndicator.init();
-            turnControl.init();
+            unifiedControlPanel.init();
 
             // 배틀 매니저 초기화
             battleManager.init();
@@ -150,8 +144,8 @@ class Game {
             this.setupSystemCallbacks();
 
             // 게임 시작 메시지
-            combatLog.addLog('게임이 시작되었습니다!', 'system');
-            combatLog.addTurnLog('player', 1);
+            unifiedControlPanel.addLog('게임이 시작되었습니다!', 'system');
+            unifiedControlPanel.addLog('플레이어 턴 1 시작', 'turn');
 
             this.initialized = true;
 
@@ -160,7 +154,7 @@ class Game {
 
         } catch (error) {
             console.error('게임 초기화 실패:', error);
-            combatLog.addLog('게임 초기화 중 오류가 발생했습니다.', 'system');
+            unifiedControlPanel.addLog('게임 초기화 중 오류가 발생했습니다.', 'system');
         }
     }
 
@@ -219,14 +213,14 @@ class Game {
     setupSystemCallbacks() {
         // 배틀 매니저 콜백
         battleManager.callbacks.onDamageDealt = (attacker, target, damage) => {
-            combatLog.addLog(
+            unifiedControlPanel.addLog(
                 `${attacker.name}이(가) ${target.name}에게 ${damage}의 데미지를 입혔습니다!`,
                 'damage'
             );
         };
         
         battleManager.callbacks.onCharacterDeath = (character) => {
-            combatLog.addLog(`${character.name}이(가) 쓰러졌습니다!`, 'system');
+            unifiedControlPanel.addLog(`${character.name}이(가) 쓰러졌습니다!`, 'system');
             
             // 캐릭터 제거 (약간의 딜레이 후)
             setTimeout(() => {
@@ -237,7 +231,8 @@ class Game {
         
         battleManager.callbacks.onBattleEnd = (result) => {
             const isVictory = result === 'player_won';
-            combatLog.addGameEndLog(isVictory);
+            const message = isVictory ? '플레이어 승리!' : '플레이어 패배!';
+            unifiedControlPanel.addLog(message, 'system');
             
             // 게임 종료 처리
             this.handleGameEnd(isVictory);
@@ -245,7 +240,7 @@ class Game {
         
         // 기존 시스템 콜백도 유지 (호환성)
         combatSystem.onCombatLog = (message) => {
-            combatLog.addLog(message, 'damage');
+            unifiedControlPanel.addLog(message, 'damage');
         };
         
         combatSystem.onCharacterDeath = battleManager.callbacks.onCharacterDeath;
@@ -253,28 +248,28 @@ class Game {
 
         // 이동 시스템 콜백
         battleManager.callbacks.onMoveComplete = (character) => {
-            combatLog.addMoveLog(character.name);
+            unifiedControlPanel.addLog(`${character.name}이(가) 이동했습니다.`, 'info');
         };
         
         movementSystem.onMoveComplete = battleManager.callbacks.onMoveComplete;
 
         // 입력 핸들러에 턴 종료 함수 연결
         inputHandler.endPlayerTurn = () => {
-            combatLog.addLog('플레이어 턴 종료', 'turn');
+            unifiedControlPanel.addLog('플레이어 턴 종료', 'turn');
 
             // 턴 전환
             gameState.endTurn();
 
             // 적 턴 시작
             if (gameState.currentTurn === TURN_TYPE.ENEMY) {
-                combatLog.addTurnLog('enemy');
+                unifiedControlPanel.addLog('적 턴 시작', 'turn');
                 inputHandler.setEnabled(false);
 
                 setTimeout(() => {
                     aiSystem.executeEnemyTurn(() => {
                         // 적 턴 종료
                         gameState.endTurn();
-                        combatLog.addTurnLog('player', Math.floor(gameState.turnCount));
+                        unifiedControlPanel.addLog(`플레이어 턴 ${Math.floor(gameState.turnCount)} 시작`, 'turn');
                         inputHandler.setEnabled(true);
                     });
                 }, 500);
@@ -387,7 +382,7 @@ class Game {
         movementSystem.clearAllHighlights();
 
         // 로그 초기화
-        combatLog.clearLogs();
+        unifiedControlPanel.clearLogs();
         fpsCounter.resetStats();
         
         // 체력바 초기화
@@ -409,13 +404,11 @@ class Game {
         sceneSetup.dispose();
 
         // UI 제거
-        combatLog.destroy();
+        // combatLog.destroy(); // 더 이상 사용안함
         fpsCounter.destroy();
         healthBarUI.destroy();
-        animationControl.destroy();
-        replayControl.destroy();
         replayIndicator.destroy();
-        turnControl.destroy();
+        unifiedControlPanel.destroy();
         
         // 커맨드 히스토리 초기화
         commandHistory.clear();
