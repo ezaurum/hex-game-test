@@ -249,22 +249,45 @@ class GameState {
         return alivePlayerCharacters.every(char => {
             // 캐릭터가 더 이상 행동할 수 없는 경우를 확인
             
-            // 1. 이미 공격했으면 행동 완료
-            if (char.hasAttacked) {
+            // 1. 모든 행동을 사용했는지 확인
+            const hasUsedAllMoves = char.actionsUsed.move >= char.actionsPerTurn.move || 
+                                   char.movedDistance >= char.movementRange;
+            const hasUsedAllAttacks = char.actionsUsed.attack >= char.actionsPerTurn.attack;
+            
+            // 2. 이동과 공격 모두 사용했거나 사용할 수 없으면 행동 완료
+            if (hasUsedAllMoves && hasUsedAllAttacks) {
                 return true;
             }
             
-            // 2. 이동력을 모두 소진했으면 행동 완료
-            if (char.movedDistance >= char.movementRange) {
+            // 3. 이동을 모두 사용했고, 공격할 수 있는 적이 없으면 행동 완료
+            if (hasUsedAllMoves && !this.canAttackAnyEnemy(char)) {
                 return true;
             }
-            
-            // 3. 이동은 했지만 더 이상 행동할 수 없는 경우
-            // (예: 주변에 공격할 적이 없고 이동도 더 할 수 없음)
-            // 이는 실제 게임 상황에서 판단해야 하므로 현재는 false 반환
             
             return false;
         });
+    }
+    
+    /**
+     * 캐릭터가 공격할 수 있는 적이 있는지 확인
+     * @param {Character} character - 확인할 캐릭터
+     * @returns {boolean}
+     */
+    canAttackAnyEnemy(character) {
+        // 이미 공격했으면 false
+        if (character.hasAttacked) return false;
+        
+        // 적 캐릭터들 중 공격 가능한 대상이 있는지 확인
+        const enemies = this.enemyCharacters.filter(enemy => enemy.isAlive());
+        
+        for (const enemy of enemies) {
+            const distance = character.currentTile.distanceTo(enemy.currentTile);
+            if (distance <= character.attackRange) {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**

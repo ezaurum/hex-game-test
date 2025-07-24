@@ -118,6 +118,24 @@ export class Character {
          * @type {boolean}
          */
         this.hasDealtDamage = false;
+        
+        /**
+         * 턴당 행동 가능 횟수 (기본: 이동 1회, 공격 1회)
+         * @type {Object}
+         */
+        this.actionsPerTurn = {
+            move: 1,
+            attack: 1
+        };
+        
+        /**
+         * 이번 턴에 사용한 행동 횟수
+         * @type {Object}
+         */
+        this.actionsUsed = {
+            move: 0,
+            attack: 0
+        };
 
         /**
          * 선택 상태
@@ -377,6 +395,10 @@ export class Character {
         this.hasMoved = false;
         this.movedDistance = 0;
         this.hasAttacked = false;
+        
+        // 행동 횟수 초기화
+        this.actionsUsed.move = 0;
+        this.actionsUsed.attack = 0;
     }
 
     /**
