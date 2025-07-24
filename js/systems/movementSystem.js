@@ -59,9 +59,10 @@ export class MovementSystem {
             return false;
         }
         
-        // 이동 범위 확인
-        if (path.length > character.movementRange) {
-            console.log('이동 범위를 초과합니다');
+        // 남은 이동 범위 확인
+        const remainingMovement = character.movementRange - character.movedDistance;
+        if (path.length > remainingMovement) {
+            console.log(`이동 범위를 초과합니다. 남은 이동력: ${remainingMovement}, 필요한 거리: ${path.length}`);
             return false;
         }
         
@@ -103,7 +104,7 @@ export class MovementSystem {
             const nextTile = path[currentIndex];
             currentIndex++;
             
-            character.moveTo(nextTile, moveNext);
+            character.moveTo(nextTile, moveNext, 1);
         };
         
         moveNext();
@@ -119,7 +120,6 @@ export class MovementSystem {
     canMoveTo(character, targetTile) {
         // 기본 검사
         if (!character || !targetTile) return false;
-        if (character.hasMoved) return false;
         if (targetTile.isOccupied()) return false;
         if (targetTile === character.currentTile) return false;
         
@@ -127,8 +127,9 @@ export class MovementSystem {
         const path = gridSystem.findPath(character.currentTile, targetTile);
         if (path.length === 0) return false;
         
-        // 이동 범위 확인
-        if (path.length > character.movementRange) return false;
+        // 남은 이동 범위 확인
+        const remainingMovement = character.movementRange - character.movedDistance;
+        if (path.length > remainingMovement) return false;
         
         return true;
     }

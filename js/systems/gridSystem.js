@@ -293,7 +293,9 @@ export class GridSystem {
         if (!character || !character.currentTile) return [];
         
         const movableTiles = [];
-        const tilesInRange = this.getTilesInRange(character.currentTile, character.movementRange);
+        // 남은 이동 범위 계산
+        const remainingMovement = character.movementRange - character.movedDistance;
+        const tilesInRange = this.getTilesInRange(character.currentTile, remainingMovement);
         
         for (const tile of tilesInRange) {
             // 자기 자신 타일 제외
@@ -304,7 +306,7 @@ export class GridSystem {
             
             // 경로가 있는지 확인
             const path = this.findPath(character.currentTile, tile);
-            if (path.length > 0 && path.length <= character.movementRange) {
+            if (path.length > 0 && path.length <= remainingMovement) {
                 movableTiles.push(tile);
             }
         }

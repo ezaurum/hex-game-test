@@ -7,6 +7,8 @@
  * @module animation
  */
 
+import * as THREE from 'three';
+
 /**
  * 이징 함수 모음
  * 

@@ -100,6 +100,12 @@ export class Character {
          * @type {boolean}
          */
         this.hasMoved = false;
+        
+        /**
+         * 이번 턴에 이동한 거리
+         * @type {number}
+         */
+        this.movedDistance = 0;
 
         /**
          * 이번 턴에 공격했는지 여부
@@ -240,9 +246,10 @@ export class Character {
 
         // 메인 그룹에 추가
         this.group.add(this.mesh);
+        
+        // 그룹 자체에도 캐릭터 데이터 저장
+        this.group.userData.character = this;
     }
-
-
 
     /**
      * 캐릭터 위치 설정
@@ -260,10 +267,16 @@ export class Character {
      *
      * @param {HexTile} targetTile - 목표 타일
      * @param {Function} [onComplete] - 이동 완료 콜백
+     * @param {number} [distance=1] - 이동 거리
      */
-    moveTo(targetTile, onComplete) {
-        if (this.hasMoved || targetTile.isOccupied()) {
-            console.log('이동 불가: 이미 이동했거나 타일이 점유됨');
+    moveTo(targetTile, onComplete, distance = 1) {
+        if (targetTile.isOccupied()) {
+            console.log('이동 불가: 타일이 점유됨');
+            return;
+        }
+        
+        if (this.movedDistance + distance > this.movementRange) {
+            console.log('이동 불가: 이동 범위 초과');
             return;
         }
 
@@ -316,6 +329,7 @@ export class Character {
             } else {
                 this.group.position.y = 0;
                 this.hasMoved = true;
+                this.movedDistance += distance;
                 // Return to idle animation
                 this.playAnimation('Idle', true);
                 if (onComplete) onComplete();
@@ -407,14 +421,24 @@ export class Character {
         healthBarUI.updateHealthBar(this);
 
         // 피격 효과 (빨간색 플래시)
-        const originalColor = this.mesh.children[0].material.color.getHex();
-        this.mesh.children.forEach(child => {
-            child.material.color.setHex(0xff0000);
+        const originalColors = new Map();
+        
+        // mesh 전체를 순회하며 material이 있는 객체만 처리
+        this.mesh.traverse(child => {
+            if (child.isMesh && child.material && child.material.color) {
+                // 원래 색상 저장
+                originalColors.set(child, child.material.color.getHex());
+                // 빨간색으로 변경
+                child.material.color.setHex(0xff0000);
+            }
         });
 
+        // 200ms 후 원래 색상으로 복원
         setTimeout(() => {
-            this.mesh.children.forEach(child => {
-                child.material.color.setHex(originalColor);
+            originalColors.forEach((color, child) => {
+                if (child.material && child.material.color) {
+                    child.material.color.setHex(color);
+                }
             });
         }, 200);
 
@@ -470,19 +494,20 @@ export class Character {
     setSelected(selected) {
         this.isSelected = selected;
 
-        if (selected) {
-            // 선택 강조 효과
-            this.mesh.children.forEach(child => {
-                child.material.emissive = new THREE.Color(COLORS.CHARACTER_SELECTED);
-                child.material.emissiveIntensity = 0.3;
-            });
-        } else {
-            // 강조 제거
-            this.mesh.children.forEach(child => {
-                child.material.emissive = new THREE.Color(0x000000);
-                child.material.emissiveIntensity = 0;
-            });
-        }
+        // mesh 전체를 순회하며 material이 있는 객체만 처리
+        this.mesh.traverse(child => {
+            if (child.isMesh && child.material) {
+                if (selected) {
+                    // 선택 강조 효과
+                    child.material.emissive = new THREE.Color(COLORS.CHARACTER_SELECTED);
+                    child.material.emissiveIntensity = 0.3;
+                } else {
+                    // 강조 제거
+                    child.material.emissive = new THREE.Color(0x000000);
+                    child.material.emissiveIntensity = 0;
+                }
+            }
+        });
     }
 
     /**
@@ -490,6 +515,7 @@ export class Character {
      */
     resetTurn() {
         this.hasMoved = false;
+        this.movedDistance = 0;
         this.hasAttacked = false;
     }
 
@@ -499,7 +525,7 @@ export class Character {
      * @returns {boolean}
      */
     canAct() {
-        return !this.hasMoved || !this.hasAttacked;
+        return (this.movedDistance < this.movementRange) || !this.hasAttacked;
     }
 
     /**
