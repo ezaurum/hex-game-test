@@ -47,12 +47,10 @@ export class AISystem {
      */
     executeEnemyTurn(callback) {
         if (this.isProcessing) {
-            console.log('AI가 이미 실행 중입니다');
             return;
         }
         
         this.isProcessing = true;
-        console.log('적 턴 시작');
         
         // 살아있는 적 캐릭터 목록
         const aliveEnemies = gameState.enemyCharacters.filter(enemy => enemy.isAlive());
@@ -65,7 +63,6 @@ export class AISystem {
         
         // 순차적으로 적 행동 실행
         this.processEnemyActions(aliveEnemies, 0, () => {
-            console.log('적 턴 종료');
             this.isProcessing = false;
             if (callback) callback();
         });
@@ -120,7 +117,6 @@ export class AISystem {
                 
             case 'wait':
             default:
-                console.log(`${enemy.name}이(가) 대기합니다`);
                 callback();
                 break;
         }
@@ -340,7 +336,6 @@ export class AISystem {
      * @param {Function} callback - 완료 콜백
      */
     performAttack(enemy, target, callback) {
-        console.log(`${enemy.name}이(가) ${target.name}을(를) 공격합니다`);
         combatSystem.performAttack(enemy, target, callback);
     }
     
@@ -352,7 +347,6 @@ export class AISystem {
      * @param {Function} callback - 완료 콜백
      */
     performMove(enemy, targetTile, callback) {
-        console.log(`${enemy.name}이(가) 이동합니다`);
         movementSystem.moveCharacter(enemy, targetTile, callback);
     }
     
@@ -379,7 +373,6 @@ export class AISystem {
      */
     setDifficulty(level) {
         this.difficultyLevel = Math.max(0, Math.min(10, level));
-        console.log(`AI 난이도 설정: ${this.difficultyLevel}`);
         
         // 난이도에 따른 행동 딜레이 조정
         this.actionDelay = 2000 - (this.difficultyLevel * 150);

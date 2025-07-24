@@ -64,7 +64,6 @@ export class CombatLog {
     init() {
         this.createUI();
         this.setupEventListeners();
-        console.log('전투 로그 UI 초기화 완료');
     }
     
     /**

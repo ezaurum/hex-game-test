@@ -74,7 +74,6 @@ export class SceneSetup {
         // 안개는 카메라로부터의 거리에 따라 객체를 페이드 아웃시킵니다
         this.scene.fog = new THREE.Fog(COLORS.FOG_COLOR, 10, 50);
         
-        console.log('씬 초기화 완료');
         return this.scene;
     }
     
@@ -107,7 +106,6 @@ export class SceneSetup {
             CAMERA.INITIAL_TARGET.z
         );
         
-        console.log('카메라 초기화 완료');
         return this.camera;
     }
     
@@ -117,7 +115,6 @@ export class SceneSetup {
      * @returns {THREE.WebGLRenderer} 생성된 렌더러 객체
      */
     initRenderer(container = document.body) {
-        console.log('initRenderer called with container:', container);
         
         // WebGL 렌더러 생성
         this.renderer = new THREE.WebGLRenderer({
@@ -128,7 +125,6 @@ export class SceneSetup {
         // Set clear color explicitly
         this.renderer.setClearColor(0x2c3e50, 1);
         
-        console.log('WebGLRenderer created:', this.renderer);
         
         // 렌더러 크기 설정
         this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -141,22 +137,13 @@ export class SceneSetup {
         this.renderer.shadowMap.type = THREE[RENDERER.SHADOW_MAP_TYPE];
         
         // DOM에 캔버스 추가
-        console.log('About to append canvas to container');
-        console.log('Container element:', container);
-        console.log('Renderer domElement:', this.renderer.domElement);
         
         try {
             container.appendChild(this.renderer.domElement);
-            console.log('Canvas successfully appended');
         } catch (error) {
             console.error('Failed to append canvas:', error);
         }
         
-        console.log('렌더러 초기화 완료');
-        console.log('Canvas added to:', container);
-        console.log('Canvas element:', this.renderer.domElement);
-        console.log('Canvas size:', this.renderer.domElement.width, 'x', this.renderer.domElement.height);
-        console.log('Container children after append:', container.children.length);
         return this.renderer;
     }
     
@@ -198,7 +185,6 @@ export class SceneSetup {
         
         this.scene.add(this.lights.directional);
         
-        console.log('조명 초기화 완료');
     }
     
     /**
@@ -225,14 +211,12 @@ export class SceneSetup {
             this._renderCount = 0;
         }
         if (this._renderCount < 5) {
-            console.log(`Render call ${this._renderCount}: scene has ${this.scene.children.length} children`);
             this._renderCount++;
             
             // Debug: Log first few mesh positions
             let meshCount = 0;
             this.scene.traverse((obj) => {
                 if (obj.isMesh && meshCount < 3) {
-                    console.log(`Mesh ${meshCount}: pos (${obj.position.x.toFixed(1)}, ${obj.position.y.toFixed(1)}, ${obj.position.z.toFixed(1)})`);
                     meshCount++;
                 }
             });
@@ -295,7 +279,6 @@ export class SceneSetup {
         // 이벤트 리스너 제거
         window.removeEventListener('resize', this.handleResize);
         
-        console.log('리소스 정리 완료');
     }
 }
 

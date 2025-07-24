@@ -65,7 +65,6 @@ export class InputHandler {
      */
     init() {
         this.setupEventListeners();
-        console.log('입력 핸들러 초기화 완료');
     }
     
     /**
@@ -111,19 +110,14 @@ export class InputHandler {
             this.createClickParticles(intersectionPoint);
             
             // 디버그 로그
-            console.log('Clicked object:', clickedObject);
-            console.log('Object name:', clickedObject.name);
-            console.log('Object userData:', clickedObject.userData);
             
             // 클릭한 객체에서 캐릭터 찾기 (부모 객체까지 탐색)
             let character = null;
             let currentObject = clickedObject;
             let depth = 0;
             while (currentObject && !character && depth < 10) {
-                console.log(`Checking object at depth ${depth}:`, currentObject.name, currentObject.userData);
                 if (currentObject.userData && currentObject.userData.character) {
                     character = currentObject.userData.character;
-                    console.log('Found character:', character);
                     break;
                 }
                 currentObject = currentObject.parent;
@@ -132,15 +126,12 @@ export class InputHandler {
             
             // 타일 클릭 처리
             if (clickedObject.userData.tile) {
-                console.log('Handling tile click');
                 this.handleTileClick(clickedObject.userData.tile);
             }
             // 캐릭터 클릭 처리
             else if (character) {
-                console.log('Handling character click:', character);
                 this.handleCharacterClick(character);
             } else {
-                console.log('No tile or character found on clicked object');
             }
         }
     }
@@ -290,7 +281,6 @@ export class InputHandler {
         // 수집된 객체들과 교차 검사
         const intersects = this.raycaster.intersectObjects(objectsToTest, false);
         
-        console.log(`Raycasting against ${objectsToTest.length} objects, found ${intersects.length} intersections`);
         
         return intersects;
     }
@@ -301,12 +291,8 @@ export class InputHandler {
      * @param {HexTile} tile
      */
     handleTileClick(tile) {
-        console.log('handleTileClick called for tile:', tile);
-        console.log('Current selected character:', gameState.selectedCharacter);
-        console.log('Is player turn?', gameState.isPlayerTurn());
         
         if (!gameState.isPlayerTurn()) {
-            console.log('플레이어 턴이 아닙니다');
             return;
         }
         
@@ -314,32 +300,21 @@ export class InputHandler {
         
         // 타일에 캐릭터가 있는 경우 선택 시도
         if (tile.isOccupied() && tile.occupant.type === CHARACTER_TYPE.PLAYER) {
-            console.log('Selecting player character on tile');
             this.selectCharacter(tile.occupant);
             return;
         }
         
         if (selectedCharacter && selectedCharacter.type === CHARACTER_TYPE.PLAYER) {
-            console.log('Selected character exists, attack mode:', gameState.isAttackMode);
-            if (gameState.isAttackMode) {
-                // 공격 모드
-                if (tile.isOccupied() && tile.occupant.type === CHARACTER_TYPE.ENEMY) {
-                    console.log('Attacking enemy');
+            // 적 캐릭터 클릭 시 공격 (공격 모드 상관없이)
+            if (tile.isOccupied() && tile.occupant.type === CHARACTER_TYPE.ENEMY) {
+                if (!selectedCharacter.hasAttacked && combatSystem.canAttack(selectedCharacter, tile.occupant)) {
                     this.performAttack(selectedCharacter, tile.occupant);
                 }
-            } else {
-                // 이동 모드
-                console.log('Tile occupied?', tile.isOccupied());
-                console.log('Can move to tile?', movementSystem.canMoveTo(selectedCharacter, tile));
-                if (!tile.isOccupied() && movementSystem.canMoveTo(selectedCharacter, tile)) {
-                    console.log('Moving to tile');
-                    this.performMove(selectedCharacter, tile);
-                } else {
-                    console.log('Cannot move to tile');
-                }
             }
-        } else {
-            console.log('No character selected');
+            // 빈 타일 클릭 시 이동
+            else if (!tile.isOccupied() && movementSystem.canMoveTo(selectedCharacter, tile)) {
+                this.performMove(selectedCharacter, tile);
+            }
         }
     }
     
@@ -355,9 +330,9 @@ export class InputHandler {
             // 플레이어 캐릭터 선택
             this.selectCharacter(character);
         } else if (character.type === CHARACTER_TYPE.ENEMY) {
-            // 적 캐릭터 클릭 - 공격 시도
+            // 적 캐릭터 클릭 - 공격 시도 (공격 모드 상관없이)
             const selectedCharacter = gameState.selectedCharacter;
-            if (selectedCharacter && gameState.isAttackMode) {
+            if (selectedCharacter && !selectedCharacter.hasAttacked && combatSystem.canAttack(selectedCharacter, character)) {
                 this.performAttack(selectedCharacter, character);
             }
         }
@@ -379,12 +354,12 @@ export class InputHandler {
         if (character.canAct()) {
             if (gameState.isAttackMode && !character.hasAttacked) {
                 this.showAttackableArea(character);
-            } else if (!character.hasMoved) {
+            } else if (character.movedDistance < character.movementRange) {
+                // 이동력이 남아있으면 이동 가능 타일 표시
                 movementSystem.showMovableTiles(character);
             }
         }
         
-        console.log(`${character.name} 선택됨`);
     }
     
     /**
@@ -402,10 +377,13 @@ export class InputHandler {
             if (character.movedDistance < character.movementRange && !gameState.isAttackMode) {
                 movementSystem.showMovableTiles(character);
             }
-            // 자동으로 공격 모드로 전환 (옵션)
-            else if (!character.hasAttacked) {
-                gameState.isAttackMode = true;
-                this.showAttackableArea(character);
+            
+            // 공격하지 않았다면 공격 가능 영역도 표시
+            if (!character.hasAttacked) {
+                // 공격 모드가 아니어도 공격 가능 영역을 미리 표시할 수 있음
+                if (!gameState.isAttackMode) {
+                    // 이동 가능 타일과 함께 공격 가능 타일도 표시 가능
+                }
             }
             
             // 모든 행동 완료 시 자동 턴 종료 (옵션)
@@ -445,7 +423,6 @@ export class InputHandler {
             tile.setAttackable(true);
         });
         
-        console.log(`${attackableTiles.length}개의 공격 가능한 타일 표시`);
     }
     
     /**
@@ -496,7 +473,7 @@ export class InputHandler {
             const character = gameState.selectedCharacter;
             if (gameState.isAttackMode && !character.hasAttacked) {
                 this.showAttackableArea(character);
-            } else if (!character.hasMoved) {
+            } else if (character.movedDistance < character.movementRange) {
                 movementSystem.showMovableTiles(character);
             }
         }
@@ -530,7 +507,6 @@ export class InputHandler {
      * 플레이어 턴 종료
      */
     endPlayerTurn() {
-        console.log('플레이어 턴 종료');
         
         // 선택 상태 초기화
         gameState.clearSelection();
@@ -576,7 +552,6 @@ export class InputHandler {
      * 디버그 모드 토글
      */
     toggleDebugMode() {
-        console.log('디버그 모드 토글');
         // 디버그 기능 구현 (추후)
     }
     

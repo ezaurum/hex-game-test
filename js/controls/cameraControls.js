@@ -95,9 +95,6 @@ export class CameraControls {
         const dy = camera.position.y - this.target.y;
         const dz = camera.position.z - this.target.z;
 
-        console.log('Camera init - camera position:', camera.position);
-        console.log('Camera init - target:', this.target);
-        console.log('Camera init - deltas:', { dx, dy, dz });
 
         this.spherical.radius = Math.sqrt(dx * dx + dy * dy + dz * dz);
         
@@ -114,20 +111,16 @@ export class CameraControls {
             this.spherical.theta = Math.atan2(dz, dx);
         }
 
-        console.log('Camera init - spherical:', this.spherical);
 
         // Copy to smooth target
         this.smoothTarget.spherical = { ...this.spherical };
 
-        console.log('카메라 컨트롤 초기화 완료');
-        console.log('Board center stored:', this.boardCenterX, this.boardCenterZ);
     }
 
     /**
      * Set the game board center for camera to orbit around
      */
     setBoardCenter(x, z) {
-        console.log('setBoardCenter called with:', { x, z });
         if (isNaN(x) || isNaN(z)) {
             console.error('setBoardCenter received NaN values!', { x, z });
             return;
@@ -136,7 +129,6 @@ export class CameraControls {
         this.boardCenterZ = z;
         this.target.set(x, 0, z);
         this.smoothTarget.position.set(x, 0, z);
-        console.log('Board center set to:', this.target);
     }
 
     /**
@@ -328,7 +320,6 @@ export class CameraControls {
 
         // 부드러운 이동을 위한 보간
         const smoothness = ANIMATION.CAMERA_SMOOTHNESS || 0.1;
-        console.log('Smoothness value:', smoothness);
 
         // 타겟 위치 보간 - NaN 체크
         if (!isNaN(this.smoothTarget.position.x) && !isNaN(this.smoothTarget.position.y) && !isNaN(this.smoothTarget.position.z)) {

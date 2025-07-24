@@ -119,7 +119,6 @@ class GameState {
      */
     toggleAttackMode() {
         this.isAttackMode = !this.isAttackMode;
-        console.log(`공격 모드: ${this.isAttackMode ? '활성화' : '비활성화'}`);
     }
     
     /**
@@ -151,7 +150,6 @@ class GameState {
         // 선택 상태 초기화
         this.clearSelection();
         
-        console.log(`턴 ${this.turnCount}: ${this.currentTurn} 차례`);
         
         return this.currentTurn;
     }
@@ -163,7 +161,6 @@ class GameState {
     setGameState(newState) {
         if (Object.values(GAME_STATE).includes(newState)) {
             this.currentState = newState;
-            console.log(`게임 상태 변경: ${newState}`);
         } else {
             console.error(`유효하지 않은 게임 상태: ${newState}`);
         }

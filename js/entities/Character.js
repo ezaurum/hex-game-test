@@ -221,7 +221,6 @@ export class Character {
                     // 모든 애니메이션 저장
                     gltf.animations.forEach((clip) => {
                         this.animations[clip.name] = clip;
-                        console.log(`Animation found: ${clip.name}`);
                     });
 
                     // 기본 애니메이션 재생 (Idle)
@@ -239,13 +238,11 @@ export class Character {
                 this.mesh.userData.character = this;
                 this.model.userData.character = this;
 
-                console.log(`${this.name} 모델 로드 완료`);
             },
             (progress) => {
                 // 로딩 진행 상황
                 if (progress.total > 0) {
                     const percent = (progress.loaded / progress.total * 100).toFixed(0);
-                    console.log(`${this.name} 모델 로딩: ${percent}%`);
                 }
             },
             (error) => {
@@ -284,12 +281,10 @@ export class Character {
      */
     moveTo(targetTile, onComplete, distance = 1) {
         if (targetTile.isOccupied()) {
-            console.log('이동 불가: 타일이 점유됨');
             return;
         }
         
         if (this.movedDistance + distance > this.movementRange) {
-            console.log('이동 불가: 이동 범위 초과');
             return;
         }
 
@@ -376,7 +371,6 @@ export class Character {
      */
     attack(target, onComplete) {
         if (this.hasAttacked) {
-            console.log('이미 이번 턴에 공격했습니다');
             return 0;
         }
 
@@ -530,7 +524,6 @@ export class Character {
      * 캐릭터 사망 처리
      */
     die() {
-        console.log(`${this.name} 사망!`);
 
         // 타일에서 제거
         if (this.currentTile) {

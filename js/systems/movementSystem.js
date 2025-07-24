@@ -48,21 +48,18 @@ export class MovementSystem {
     moveCharacter(character, targetTile, callback) {
         // 이동 가능 여부 확인
         if (!this.canMoveTo(character, targetTile)) {
-            console.log('해당 타일로 이동할 수 없습니다');
             return false;
         }
         
         // 경로 찾기
         const path = gridSystem.findPath(character.currentTile, targetTile);
         if (path.length === 0) {
-            console.log('경로를 찾을 수 없습니다');
             return false;
         }
         
         // 남은 이동 범위 확인
         const remainingMovement = character.movementRange - character.movedDistance;
         if (path.length > remainingMovement) {
-            console.log(`이동 범위를 초과합니다. 남은 이동력: ${remainingMovement}, 필요한 거리: ${path.length}`);
             return false;
         }
         
@@ -71,7 +68,6 @@ export class MovementSystem {
         
         // 경로 따라 이동
         this.moveAlongPath(character, path, () => {
-            console.log(`${character.name}이(가) 이동 완료`);
             
             if (this.onMoveComplete) {
                 this.onMoveComplete(character);
@@ -153,7 +149,6 @@ export class MovementSystem {
         
         this.highlightedMovableTiles = movableTiles;
         
-        console.log(`${movableTiles.length}개의 이동 가능한 타일 표시`);
     }
     
     /**
@@ -270,7 +265,6 @@ export class MovementSystem {
             const targetPos = targetTile.getPixelPosition();
             character.setPosition(targetPos.x, targetPos.z);
             
-            console.log(`${character.name}이(가) ${actualDistance}칸 밀려났습니다`);
         }
         
         if (callback) callback();
@@ -287,7 +281,6 @@ export class MovementSystem {
     teleport(character, targetTile, callback) {
         // 목표 타일 검사
         if (!targetTile || targetTile.isOccupied()) {
-            console.log('순간이동 불가: 목표 타일이 점유됨');
             return false;
         }
         
@@ -307,7 +300,6 @@ export class MovementSystem {
         // 순간이동 이펙트 (추후 구현)
         // this.playTeleportEffect(character);
         
-        console.log(`${character.name}이(가) 순간이동했습니다`);
         
         if (callback) callback();
         return true;
@@ -351,7 +343,6 @@ export class MovementSystem {
             this.moveAlongPath(character, dashPath, callback);
             character.hasMoved = true;
         } else {
-            console.log('대시할 수 없습니다');
             if (callback) callback();
         }
     }

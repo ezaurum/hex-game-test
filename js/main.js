@@ -56,19 +56,12 @@ class Game {
      * 게임 초기화
      */
     async init() {
-        console.log('게임 초기화 시작...');
 
         try {
             // Three.js 씬 설정
             const gameCanvas = document.getElementById('gameCanvas');
             const { scene, camera, renderer } = sceneSetup.init(gameCanvas);
 
-            console.log('Scene setup complete:', {
-                scene: scene,
-                sceneChildren: scene.children.length,
-                camera: camera.position,
-                renderer: renderer
-            });
 
             // UI 초기화 (캐릭터 생성 전에 해야 함)
             combatLog.init();
@@ -77,11 +70,6 @@ class Game {
 
             // 그리드 생성
             gridSystem.createGrid();
-            console.log('Grid created:', {
-                tileMapSize: gridSystem.tileMap.size,
-                allTilesLength: gridSystem.allTiles.length,
-                sceneChildrenAfterGrid: scene.children.length
-            });
 
             // 캐릭터 생성
             this.createCharacters();
@@ -90,7 +78,6 @@ class Game {
             let centerX = 0, centerZ = 0, tileCount = 0;
             gridSystem.allTiles.forEach(tile => {
                 const pos = tile.getPixelPosition();
-                console.log('Tile position:', pos);
                 if (!isNaN(pos.x) && !isNaN(pos.z)) {
                     centerX += pos.x;
                     centerZ += pos.z;
@@ -104,7 +91,6 @@ class Game {
                 centerZ /= tileCount;
             }
 
-            console.log('Game board center:', centerX, centerZ);
             
             // Check if center values are valid
             if (isNaN(centerX) || isNaN(centerZ)) {
@@ -116,9 +102,6 @@ class Game {
             // Force camera to a good position FIRST
             camera.position.set(centerX + 10, 15, centerZ + 10);
             camera.lookAt(centerX, 0, centerZ);
-            console.log('Camera positioned to look at board center');
-            console.log('Camera position after set:', camera.position);
-            console.log('Camera center values:', { centerX, centerZ });
             
             // Set board center AFTER camera is positioned
             cameraControls.setBoardCenter(centerX, centerZ);
@@ -136,7 +119,6 @@ class Game {
             combatLog.addTurnLog('player', 1);
 
             this.initialized = true;
-            console.log('게임 초기화 완료!');
 
             // 게임 루프 시작
             this.startGameLoop();
@@ -151,7 +133,6 @@ class Game {
      * 캐릭터 생성
      */
     createCharacters() {
-        console.log('캐릭터 생성 중...');
 
         // 플레이어 캐릭터 생성
         const playerPositions = [
@@ -193,7 +174,6 @@ class Game {
             }
         });
 
-        console.log(`캐릭터 생성 완료: 플레이어 ${gameState.playerCharacters.length}명, 적 ${gameState.enemyCharacters.length}명`);
     }
 
     /**
@@ -284,7 +264,6 @@ class Game {
 
             // Debug: Log first few frames
             if (frameCount < 5) {
-                console.log(`Frame ${frameCount}: Rendering...`);
                 frameCount++;
             }
         };
@@ -327,7 +306,6 @@ class Game {
      * 게임 재시작
      */
     restart() {
-        console.log('게임 재시작...');
 
         // 게임 루프 정지
         this.stopGameLoop();
@@ -370,7 +348,6 @@ class Game {
      * 게임 종료
      */
     destroy() {
-        console.log('게임 종료...');
 
         // 게임 루프 정지
         this.stopGameLoop();
@@ -386,7 +363,6 @@ class Game {
         fpsCounter.destroy();
         healthBarUI.destroy();
 
-        console.log('게임이 완전히 종료되었습니다.');
     }
 }
 

@@ -47,7 +47,6 @@ export class GridSystem {
      * @tutorial https://www.redblobgames.com/grids/hexagons/#conversions-offset
      */
     createGrid() {
-        console.log('육각형 그리드 생성 시작...');
         
         // 그리드 중심 오프셋 계산
         const offsetX = -GRID_WIDTH / 2;
@@ -82,7 +81,6 @@ export class GridSystem {
         // 게임 상태에 그리드 저장
         gameState.hexGrid = this.hexGrid;
         
-        console.log(`그리드 생성 완료: ${this.allTiles.length}개 타일`);
     }
     
     /**

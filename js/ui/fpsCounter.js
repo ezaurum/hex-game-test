@@ -87,7 +87,6 @@ export class FPSCounter {
     init() {
         this.createUI();
         this.applyStyles();
-        console.log('FPS 카운터 초기화 완료');
     }
     
     /**

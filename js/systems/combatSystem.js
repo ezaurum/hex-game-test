@@ -46,7 +46,6 @@ export class CombatSystem {
     performAttack(attacker, target, callback) {
         // 유효성 검사
         if (!this.canAttack(attacker, target)) {
-            console.log('공격할 수 없습니다');
             return false;
         }
         
@@ -243,7 +242,6 @@ export class CombatSystem {
      * @param {Character} character - 사망한 캐릭터
      */
     handleCharacterDeath(character) {
-        console.log(`${character.name} 사망 처리`);
         
         // 게임 상태에서 제거
         gameState.removeDeadCharacter(character);
